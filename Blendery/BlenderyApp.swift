@@ -11,7 +11,9 @@ import SwiftUI
 struct BlenderyApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            OnboardingAnimationView()
+                .ignoresSafeArea(.keyboard, edges: .all)
         }
     }
 }
+

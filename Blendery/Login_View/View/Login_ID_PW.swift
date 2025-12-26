@@ -37,6 +37,7 @@ struct Login_ID_PW: View {
                     .stroke(Color(red: 0.15, green: 0.15, blue: 0.15), lineWidth: 1)
             )
         }
+        .padding(.bottom, 8)
         
         // ─── [수정됨] 비밀번호 입력 ───
         VStack() {
