@@ -24,9 +24,11 @@ struct LoginView: View {
 
 struct LoginView_Previews: PreviewProvider {
     static var previews: some View {
-        ZStack {
-            Color.black.ignoresSafeArea()
-            LoginView()
+        NavigationStack {
+            ZStack {
+                Color.black.ignoresSafeArea()
+                LoginView()
+            }
         }
     }
 }

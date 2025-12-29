@@ -1,15 +1,9 @@
 //
-
 //  Login_AutoLogin.swift
-
 //  Blendery
-
 //
-
 //  Created by 박성준 on 12/25/25.
-
 //
-
 
 import SwiftUI
 

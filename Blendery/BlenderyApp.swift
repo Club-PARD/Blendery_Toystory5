@@ -11,8 +11,11 @@ import SwiftUI
 struct BlenderyApp: App {
     var body: some Scene {
         WindowGroup {
-            OnboardingAnimationView()
-                .ignoresSafeArea(.keyboard, edges: .all)
+//            Mainpage_View()
+            NavigationStack {
+                OnboardingAnimationView()
+                    .ignoresSafeArea(.keyboard, edges: .all)
+            }
         }
     }
 }
