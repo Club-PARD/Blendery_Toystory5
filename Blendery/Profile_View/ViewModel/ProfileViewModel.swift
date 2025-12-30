@@ -20,7 +20,7 @@ import Combine
 @MainActor
 final class ProfileViewModel: ObservableObject {
 
-    let profile: UserProfile
+    var profile: UserProfile
     @Published var profileImage: Image? = nil
 
     @Published var isPhotoEditSheetVisible = false
@@ -64,6 +64,15 @@ final class ProfileViewModel: ObservableObject {
         showPhotoPicker = false
 
         try? await service.uploadProfileImage(data)
+    }
+    
+    func updateName(_ newName: String) {
+        let trimmed = newName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+
+        if trimmed != profile.name {
+            profile.name = trimmed
+        }
     }
 }
 

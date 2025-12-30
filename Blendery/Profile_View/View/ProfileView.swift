@@ -11,6 +11,8 @@ import PhotosUI
 struct ProfileView: View {
     
     @StateObject private var viewModel: ProfileViewModel
+    @State private var showNameEdit = false
+    @State private var selectedContactEdit: ContactEditType?
     
     init(profile: UserProfile) {
         _viewModel = StateObject(
@@ -18,96 +20,58 @@ struct ProfileView: View {
         )
     }
     
-    var body: some View {
-        VStack(spacing: 24) {
-            profileCard
-            infoCard
-            
-            Spacer()
-            
-            if viewModel.isPhotoEditSheetVisible {
-                photoEditButtons
-            }
-        }
-        .padding()
-        .photosPicker(
-            isPresented: $viewModel.showPhotoPicker,
-            selection: $viewModel.selectedItem,
-            matching: .images
-        )
-        .onChange(of: viewModel.selectedItem) { item in
-            Task {
-                await viewModel.handleSelectedPhoto(item)
-            }
-        }
-    }
     
-    private var profileCard: some View {
-        HStack(spacing: 12) {
-            ZStack(alignment: .bottomTrailing) {
-                ZStack {
-                    if let image = viewModel.profileImage {
-                        image
-                            .resizable()
-                            .scaledToFill()
-                    } else {
-                        Circle()
-                            .fill(
-                                Color(
-                                    red: 247/255,
-                                    green: 247/255,
-                                    blue: 247/255
-                                )
-                            )
-                            .overlay(
-                                Image("profileLogo")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 30)
-                            )
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                VStack(spacing: 24) {
+                    ProfileCard(
+                        viewModel: viewModel,
+                        showEditButton: true,
+                        showCameraButton: true,
+                        onTapEditName: {
+                            showNameEdit = true
+                        },
+                        nameView: nil
+                    )
+                    infoCard
+                    Spacer()
+                    
+                    if viewModel.isPhotoEditSheetVisible {
+                        photoEditButtons
                     }
                 }
-                .frame(width: 72, height: 72)
-                .clipShape(Circle())
+                .padding()
+                .disabled(viewModel.isPhotoEditSheetVisible)
                 
-                Button {
-                    viewModel.openPhotoEditSheet()
-                } label: {
-                    cameraIcon
+                if viewModel.isPhotoEditSheetVisible {
+                    Color.black.opacity(0.001)
+                        .ignoresSafeArea()
+                        .onTapGesture {}
                 }
-                .offset(x: 2, y: 0)
+                
+                if viewModel.isPhotoEditSheetVisible {
+                    VStack {
+                        Spacer()
+                        photoEditButtons
+                    }
+                    .padding(.bottom)
+                }
             }
-            
-            VStack (spacing: 6){
-                HStack(spacing: 6) {
-                    Text(viewModel.profile.name)
-                        .font(.system(size: 18, weight: .medium))
-                    Image("pencil")
-                    Spacer()
+            .photosPicker(
+                isPresented: $viewModel.showPhotoPicker,
+                selection: $viewModel.selectedItem,
+                matching: .images
+            )
+            .onChange(of: viewModel.selectedItem) { item in
+                Task {
+                    await viewModel.handleSelectedPhoto(item)
                 }
-                
-                HStack {
-                    Text("\(viewModel.profile.role)")
-                        .font(.system(size: 12))
-                        .foregroundColor(Color(red: 25/255, green: 24/255, blue: 24/255, opacity: 1))
-                        .padding(.horizontal, 4)
-                        .padding(.vertical, 1)
-                        .background(
-                            RoundedRectangle(cornerRadius: 5)
-                                .stroke(Color.gray.opacity(0.5), lineWidth: 1)
-                        )
-                    Text("\(viewModel.profile.joinedAt)")
-                        .font(.system(size: 12))
-                        .foregroundColor(Color(red: 136/255, green: 136/255, blue: 136/255, opacity: 1))
-                    Spacer()
-                }
-                
             }
-            .padding(.horizontal, 5)
+            .navigationDestination(isPresented: $showNameEdit) {
+                NameEditView(viewModel: viewModel)
+            }
         }
-        .padding(.vertical, 35)
-        .padding(.horizontal, 20)
-        .background(cardBackground)
     }
     
     private var infoCard: some View {
@@ -116,7 +80,9 @@ struct ProfileView: View {
                 icon: Image("phone"),
                 title: "Phone",
                 value: viewModel.profile.phone
-            )
+            ) {
+                selectedContactEdit = .phone
+            }
             
             Divider()
                 .padding(.leading, 23 + 24 + 8) // 아이콘 정렬 기준선
@@ -125,7 +91,9 @@ struct ProfileView: View {
                 icon: Image("email"),
                 title: "Email",
                 value: viewModel.profile.email
-            )
+            ) {
+                selectedContactEdit = .email
+            }
         }
         .padding(.vertical, 10)
         .background(cardBackground)
@@ -134,10 +102,11 @@ struct ProfileView: View {
     private func infoRow(
         icon: Image,
         title: String,
-        value: String
+        value: String,
+        onTap: @escaping () -> Void
     ) -> some View {
+        
         HStack(alignment: .center, spacing: 8) {
-            
             icon
                 .resizable()
                 .scaledToFit()
@@ -157,6 +126,12 @@ struct ProfileView: View {
             }
             
             Spacer()
+            Button(action: onTap) {
+                Image(systemName: "chevron.right")
+                    .foregroundColor(.gray)
+                    .font(.system(size: 24))
+            }
+            .buttonStyle(.plain)
         }
         .padding(.horizontal, 23)
         .padding(.vertical, 12)
@@ -201,6 +176,7 @@ struct ProfileView: View {
                     )
             )
         }
+        .padding(.horizontal)
     }
 
 
