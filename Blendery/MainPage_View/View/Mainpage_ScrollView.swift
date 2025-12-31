@@ -1,3 +1,10 @@
+//
+//  Mainpage_ScrollView.swift
+//  Blendery
+//
+//  Created by 박성준 on 12/31/25.
+//
+
 import SwiftUI
 import UIKit
 
@@ -10,9 +17,7 @@ private struct CardHeightKey: PreferenceKey {
 
 struct Mainpage_ScrollView: View {
     let selectedCategory: String
-
-    // ✅ 부모(Mainpage_View)에서 들고 내려오는 즐찾 상태
-    @Binding var cards: [MenuCardModel]
+    @ObservedObject var vm: MainpageViewModel
 
     @State private var measuredHeights: [UUID: CGFloat] = [:]
 
@@ -27,20 +32,18 @@ struct Mainpage_ScrollView: View {
 
 // MARK: - FAVORITE: 카드(2열 masonry)
 private extension Mainpage_ScrollView {
-    var favoriteItems: [MenuCardModel] {
-        cards.filter { $0.isBookmarked }
-    }
 
     var favoriteMasonryView: some View {
-        let columns = distributeMasonry(items: favoriteItems, heights: measuredHeights)
+        let columns = vm.distributeMasonry(items: vm.favoriteItems, heights: measuredHeights)
 
         return ScrollView {
             HStack(spacing: 17) {
+
                 VStack(spacing: 17) {
                     ForEach(columns.left) { item in
                         MenuCardView(
                             model: item,
-                            onToggleBookmark: { toggleBookmark(id: item.id) }
+                            onToggleBookmark: { vm.toggleBookmark(id: item.id) }
                         )
                         .background(
                             GeometryReader { geo in
@@ -57,7 +60,7 @@ private extension Mainpage_ScrollView {
                     ForEach(columns.right) { item in
                         MenuCardView(
                             model: item,
-                            onToggleBookmark: { toggleBookmark(id: item.id) }
+                            onToggleBookmark: { vm.toggleBookmark(id: item.id) }
                         )
                         .background(
                             GeometryReader { geo in
@@ -81,59 +84,24 @@ private extension Mainpage_ScrollView {
 
 // MARK: - NORMAL: 리스트(세로로 쭉)
 private extension Mainpage_ScrollView {
-    var normalItems: [MenuCardModel] {
-        // ✅ 즐겨찾기 제외 카테고리는 해당 카테고리만
-        cards.filter { $0.category == selectedCategory }
-    }
 
     var normalListView: some View {
-        ScrollView {
+        let items = vm.normalItems(for: selectedCategory)
+
+        return ScrollView {
             LazyVStack(spacing: 0) {
-                ForEach(normalItems) { item in
+                ForEach(items) { item in
                     MenuListRow(
                         model: item,
-                        onToggleBookmark: { toggleBookmark(id: item.id) }
+                        onToggleBookmark: { vm.toggleBookmark(id: item.id) }
                     )
                 }
             }
-            .padding(.top, 0) //  패딩 제거
         }
     }
 }
 
-// MARK: - 로직(토글/배치)
-private extension Mainpage_ScrollView {
-    func toggleBookmark(id: UUID) {
-        guard let idx = cards.firstIndex(where: { $0.id == id }) else { return }
-        cards[idx].isBookmarked.toggle()
-        //  즐겨찾기 탭에서 해제하면 즉시 사라짐
-    }
-
-    func distributeMasonry(
-        items: [MenuCardModel],
-        heights: [UUID: CGFloat]
-    ) -> (left: [MenuCardModel], right: [MenuCardModel]) {
-
-        var left: [MenuCardModel] = []
-        var right: [MenuCardModel] = []
-        var leftH: CGFloat = 0
-        var rightH: CGFloat = 0
-
-        for item in items {
-            let h = heights[item.id] ?? 200
-            if leftH <= rightH {
-                left.append(item)
-                leftH += h + 17
-            } else {
-                right.append(item)
-                rightH += h + 17
-            }
-        }
-        return (left, right)
-    }
-}
-
-// MARK: - 카드(즐겨찾기 탭에서만 사용)
+// MARK: - 카드(즐겨찾기 탭에서만)
 private struct MenuCardView: View {
     let model: MenuCardModel
     let onToggleBookmark: () -> Void
@@ -159,15 +127,16 @@ private struct MenuCardView: View {
 
                 Text(model.title)
                     .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.black)
 
                 Text(model.subtitle)
-                    .font(.system(size: 12))
+                    .font(.system(size: 14))
                     .foregroundColor(.gray)
 
                 VStack(alignment: .leading, spacing: 3) {
                     ForEach(model.lines, id: \.self) { line in
                         Text(line)
-                            .font(.system(size: 12))
+                            .font(.system(size: 15))
                             .foregroundColor(.gray)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -175,7 +144,6 @@ private struct MenuCardView: View {
             }
             .padding(14)
 
-            // ✅ 즐찾 아이콘 로직 정상화 (true면 '켜짐' 이미지)
             Button(action: onToggleBookmark) {
                 Image(model.isBookmarked ? "즐찾아이콘" : "즐찾끔")
                     .resizable()
@@ -187,15 +155,14 @@ private struct MenuCardView: View {
     }
 }
 
-// MARK: - 리스트 Row(즐겨찾기 제외 카테고리)
+// MARK: - 리스트 Row(검색 오버레이에서도 쓰니까 공개 유지)
 struct MenuListRow: View {
     let model: MenuCardModel
     let onToggleBookmark: () -> Void
 
     var body: some View {
         Button(action: {
-            // ✅ 일단 클릭 가능하게만 (원하면 여기서 상세화면 이동)
-            // print("tap:", model.title)
+            // TODO: 상세화면 이동 등
         }) {
             HStack(spacing: 12) {
 
@@ -220,20 +187,11 @@ struct MenuListRow: View {
                     .foregroundColor(.gray)
             }
             .padding(.horizontal, 16)
-            // ✅ “가로 끝까지 덮게” 핵심
             .frame(maxWidth: .infinity, alignment: .leading)
-
-            // ✅ 내부 여백도 원하면 0까지 가능
-            // 완전 패딩 0이면 너무 붙어서 보통은 최소만 둠
-            .padding(.horizontal, 0)
             .padding(.vertical, 12)
-
-            // ✅ 테두리/카드 느낌 제거: 그냥 흰 바탕
             .background(Color.white)
         }
         .buttonStyle(.plain)
-
-        // ✅ 항목 사이 얇은 구분선(원하면 유지/삭제 가능)
     }
 
     private var rowImage: some View {
@@ -255,4 +213,3 @@ struct MenuListRow: View {
         }
     }
 }
-

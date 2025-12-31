@@ -31,6 +31,7 @@ struct MenuCardModel: Identifiable {
 }
 
 let menuCardsMock: [MenuCardModel] = [
+    // ✅ true 5개만 유지
     MenuCardModel(
         category: "커피",
         tags: ["ICE", "EX"],
@@ -64,7 +65,7 @@ let menuCardsMock: [MenuCardModel] = [
         title: "초코 라떼",
         subtitle: "논커피",
         lines: ["초코 소스 3펌프", "스팀우유 윗선", "휘핑크림 토핑(선택)"],
-        isBookmarked: false
+        isBookmarked: true
     ),
     MenuCardModel(
         category: "에이드",
@@ -80,7 +81,7 @@ let menuCardsMock: [MenuCardModel] = [
         title: "딸기 주스",
         subtitle: "과일주스",
         lines: ["딸기 베이스", "물/우유 선택", "얼음 9부(선택)"],
-        isBookmarked: false
+        isBookmarked: true
     ),
     MenuCardModel(
         category: "블렌디드",
@@ -117,15 +118,13 @@ let menuCardsMock: [MenuCardModel] = [
         isBookmarked: true
     ),
 
-    // --- 추가 22개 (총 30개) ---
-
     MenuCardModel(
         category: "커피",
         tags: ["ICE"],
         title: "카라멜 마끼아또",
         subtitle: "에스프레소 2샷",
         lines: ["카라멜 시럽 2펌프", "우유 윗선", "얼음 9부"],
-        isBookmarked: true
+        isBookmarked: false
     ),
     MenuCardModel(
         category: "커피",
@@ -169,7 +168,7 @@ let menuCardsMock: [MenuCardModel] = [
             "컵에 옮겨 담기",
             "딸기 조각 토핑(선택)"
         ],
-        isBookmarked: false
+        isBookmarked: true
     ),
     MenuCardModel(
         category: "커피",
@@ -177,7 +176,7 @@ let menuCardsMock: [MenuCardModel] = [
         title: "카페 라떼",
         subtitle: "에스프레소 2샷",
         lines: ["스팀우유 윗선", "폼 1cm(선택)"],
-        isBookmarked: false
+        isBookmarked: true
     ),
 
     MenuCardModel(
@@ -205,7 +204,7 @@ let menuCardsMock: [MenuCardModel] = [
             "휘핑크림 토핑",
             "그린티 파우더 추가 토핑"
         ],
-        isBookmarked: false
+        isBookmarked: true
     ),
     MenuCardModel(
         category: "논커피",
@@ -213,7 +212,7 @@ let menuCardsMock: [MenuCardModel] = [
         title: "고구마 라떼",
         subtitle: "논커피",
         lines: ["고구마 베이스", "우유 윗선", "얼음 9부(선택)"],
-        isBookmarked: false
+        isBookmarked: true
     ),
     MenuCardModel(
         category: "논커피",
@@ -229,7 +228,7 @@ let menuCardsMock: [MenuCardModel] = [
         title: "토피넛 라떼",
         subtitle: "논커피",
         lines: ["토피넛 시럽 2펌프", "우유 윗선", "얼음 9부"],
-        isBookmarked: false
+        isBookmarked: true
     ),
 
     MenuCardModel(
@@ -238,7 +237,7 @@ let menuCardsMock: [MenuCardModel] = [
         title: "레몬 에이드",
         subtitle: "에이드",
         lines: ["레몬 베이스 3펌프", "탄산수 윗선", "얼음 9부"],
-        isBookmarked: false
+        isBookmarked: true
     ),
     MenuCardModel(
         category: "에이드",
@@ -254,7 +253,7 @@ let menuCardsMock: [MenuCardModel] = [
         title: "블루레몬 에이드",
         subtitle: "에이드",
         lines: ["블루레몬 베이스 3펌프", "탄산수 윗선", "얼음 9부"],
-        isBookmarked: false
+        isBookmarked: true
     ),
     MenuCardModel(
         category: "에이드",
@@ -279,7 +278,7 @@ let menuCardsMock: [MenuCardModel] = [
         title: "바나나 주스",
         subtitle: "과일주스",
         lines: ["바나나 베이스", "우유 윗선", "블렌딩"],
-        isBookmarked: false
+        isBookmarked: true
     ),
     MenuCardModel(
         category: "과일주스",
@@ -287,7 +286,7 @@ let menuCardsMock: [MenuCardModel] = [
         title: "키위 주스",
         subtitle: "과일주스",
         lines: ["키위 베이스", "물 윗선", "얼음 9부(선택)"],
-        isBookmarked: false
+        isBookmarked: true
     ),
     MenuCardModel(
         category: "과일주스",
@@ -337,7 +336,7 @@ let menuCardsMock: [MenuCardModel] = [
         title: "아이스 복숭아 티",
         subtitle: "티",
         lines: ["복숭아 베이스 2펌프", "물 윗선", "얼음 9부"],
-        isBookmarked: true
+        isBookmarked: false
     ),
     MenuCardModel(
         category: "티",
@@ -370,7 +369,7 @@ let menuCardsMock: [MenuCardModel] = [
         title: "시즌 유자차",
         subtitle: "시즌메뉴",
         lines: ["유자 베이스 3스푼", "뜨거운 물 윗선", "혼합"],
-        isBookmarked: true
+        isBookmarked: false
     ),
     MenuCardModel(
         category: "시즌메뉴",
@@ -386,6 +385,6 @@ let menuCardsMock: [MenuCardModel] = [
         title: "시즌 민트초코",
         subtitle: "시즌메뉴",
         lines: ["민트 파우더 3스푼", "우유 윗선", "얼음 9부(선택)", "초코칩 토핑(선택)"],
-        isBookmarked: true
+        isBookmarked: false
     )
 ]

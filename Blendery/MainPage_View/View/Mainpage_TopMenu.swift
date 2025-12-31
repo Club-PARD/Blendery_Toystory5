@@ -9,17 +9,8 @@ private struct CategoryFrameKey: PreferenceKey {
 
 struct Mainpage_TopMenu: View {
     let onTapStoreButton: () -> Void
-    let categories: [String]
     @Binding var selectedCategory: String
-
-    @State private var categoryFrames: [String: CGRect] = [:]
-
-    // ✅ 주황색(원하는 값으로 조절)
-    private let favoriteOrange = Color(red: 0.89, green: 0.19, blue: 0)
-
-    private var favoriteKey: String {
-        categories.first ?? "즐겨찾기"
-    }
+    @ObservedObject var vm: TopMenuViewModel
 
     var body: some View {
         VStack(spacing: 12) {
@@ -39,7 +30,7 @@ struct Mainpage_TopMenu: View {
                 }
                 .padding(.horizontal, 24)
             }
-            .padding(.top , 20)
+            .padding(.top, 20)
             .buttonStyle(.plain)
 
             HStack {
@@ -47,9 +38,7 @@ struct Mainpage_TopMenu: View {
                     .font(.system(size: 34, weight: .bold))
                 Spacer()
 
-                Button(action: {
-                    // 프로필 버튼 액션
-                }) {
+                Button(action: {}) {
                     Image("사람")
                         .resizable()
                         .frame(width: 24, height: 24)
@@ -60,12 +49,8 @@ struct Mainpage_TopMenu: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 0) {
-                    ForEach(Array(categories.enumerated()), id: \.element) { idx, category in
+                    ForEach(vm.categories, id: \.self) { category in
                         let isSelected = (selectedCategory == category)
-                        let isFavorite = (category == favoriteKey)
-                        let itemWidth: CGFloat =
-                            (idx == 0) ? 80 :
-                            (category == "아이스크림") ? 80 : 63
 
                         Button {
                             withAnimation(.easeInOut(duration: 0.2)) {
@@ -75,11 +60,10 @@ struct Mainpage_TopMenu: View {
                             Text(category)
                                 .font(.system(size: 15, weight: isSelected ? .bold : .regular))
                                 .lineLimit(1)
-                                .fixedSize(horizontal: true, vertical: false)   // ✅ 글자 폭대로 커지게(… 방지)
-                                .padding(.horizontal, 14)                       // ✅ 버튼 좌우 여백(= 버튼 폭)
+                                .fixedSize(horizontal: true, vertical: false)
+                                .padding(.horizontal, 14)
                                 .frame(height: 33)
-                                .frame(minWidth: idx == 0 ? 80 : 0)             // ✅ (선택) 즐겨찾기만 최소폭 유지
-                                .foregroundColor(isFavorite ? favoriteOrange : .black)
+                                .foregroundColor(vm.textColor(for: category))
                                 .background(
                                     GeometryReader { geo in
                                         Color.clear.preference(
@@ -97,24 +81,16 @@ struct Mainpage_TopMenu: View {
             }
             .coordinateSpace(name: "CategoryScroll")
             .onPreferenceChange(CategoryFrameKey.self) { frames in
-                self.categoryFrames = frames
+                vm.categoryFrames = frames
             }
             .overlay(alignment: .bottomLeading) {
-                GeometryReader { proxy in
-                    ZStack(alignment: .bottomLeading) {
-
-                        // ✅ 선택 인디케이터(색 규칙 적용)
-                        if let f = categoryFrames[selectedCategory] {
-                            let indicatorColor: Color = (selectedCategory == favoriteKey)
-                                ? favoriteOrange
-                                : .black
-
-                            Rectangle()
-                                .fill(indicatorColor)
-                                .frame(width: f.width, height: 2)
-                                .offset(x: f.minX, y: 0)
-                                .animation(.easeInOut(duration: 0.2), value: selectedCategory)
-                        }
+                GeometryReader { _ in
+                    if let f = vm.categoryFrames[selectedCategory] {
+                        Rectangle()
+                            .fill(vm.indicatorColor(for: selectedCategory))
+                            .frame(width: f.width, height: 2)
+                            .offset(x: f.minX, y: 0)
+                            .animation(.easeInOut(duration: 0.2), value: selectedCategory)
                     }
                 }
                 .frame(height: 2)
@@ -126,7 +102,7 @@ struct Mainpage_TopMenu: View {
 #Preview {
     Mainpage_TopMenu(
         onTapStoreButton: {},
-        categories: ["즐겨찾기", "커피", "논커피", "에이드"],
-        selectedCategory: .constant("즐겨찾기")
+        selectedCategory: .constant("즐겨찾기"),
+        vm: TopMenuViewModel(categories: ["즐겨찾기", "커피", "논커피", "아이스크림", "에이드"])
     )
 }

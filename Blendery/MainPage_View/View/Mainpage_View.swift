@@ -4,14 +4,21 @@ import UIKit
 struct Mainpage_View: View {
 
     @State private var showStoreModal: Bool = false
-    @State private var searchText: String = ""
     @State private var selectedCategory: String = "즐겨찾기"
 
-    // ✅ 즐겨찾기 토글 상태 유지
-    @State private var cards: [MenuCardModel] = menuCardsMock
+    @State private var toastMessage: String = ""
+    @State private var showToast: Bool = false
 
-    // ✅ 검색창 포커스(=키보드 올라옴) 감지
-    @FocusState private var isSearchFocused: Bool
+    @StateObject private var vm = MainpageViewModel()
+    @StateObject private var searchVM = SearchBarViewModel()
+
+    // ✅ categories를 프로퍼티 초기화에서 쓰는 게 불안정하면 init으로 박아주는 게 제일 안전
+    @StateObject private var topMenuVM: TopMenuViewModel
+    init() {
+        _topMenuVM = StateObject(wrappedValue: TopMenuViewModel(categories: categories))
+    }
+
+    @FocusState private var isSearchFieldFocused: Bool
 
     var body: some View {
         ZStack {
@@ -19,39 +26,34 @@ struct Mainpage_View: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
+
                 Mainpage_TopMenu(
                     onTapStoreButton: {
-                        withAnimation(.easeInOut(duration: 0.25)) {
-                            showStoreModal = true
-                        }
+                        withAnimation(.easeInOut(duration: 0.25)) { showStoreModal = true }
                     },
-                    categories: categories,
-                    selectedCategory: $selectedCategory
+                    selectedCategory: $selectedCategory,
+                    vm: topMenuVM
                 )
                 .background(Color.white)
 
                 Mainpage_ScrollView(
                     selectedCategory: selectedCategory,
-                    cards: $cards
+                    vm: vm
                 )
                 .id(selectedCategory)
             }
 
-            // ✅ 검색 오버레이
-            if isSearchFocused {
+            if searchVM.isFocused {
                 searchOverlay
                     .transition(.opacity)
                     .zIndex(50)
             }
 
-            // ✅ 매장 선택 모달
             if showStoreModal {
                 Color.black.opacity(0.25)
                     .ignoresSafeArea()
                     .onTapGesture {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            showStoreModal = false
-                        }
+                        withAnimation(.easeInOut(duration: 0.2)) { showStoreModal = false }
                     }
                     .zIndex(90)
 
@@ -62,20 +64,13 @@ struct Mainpage_View: View {
 
                         StoreSelectPanel(
                             onClose: {
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    showStoreModal = false
-                                }
+                                withAnimation(.easeInOut(duration: 0.2)) { showStoreModal = false }
                             }
                         )
                     }
                     .frame(maxWidth: .infinity, alignment: .top)
                     .background(Color.white)
-                    .clipShape(
-                        RoundedCorner(
-                            radius: 16,
-                            corners: [.bottomLeft, .bottomRight]
-                        )
-                    )
+                    .clipShape(RoundedCorner(radius: 16, corners: [.bottomLeft, .bottomRight]))
                     .transition(.move(edge: .top))
                     .ignoresSafeArea(edges: .top)
                 }
@@ -84,18 +79,42 @@ struct Mainpage_View: View {
         }
         .navigationBarBackButtonHidden(true)
 
+        // ✅ 토스트 이벤트 처리
+        .onChange(of: vm.toast) { newToast in
+            guard let newToast else { return }
+            presentToast(newToast.message)
+            vm.clearToast()
+        }
+
+        // ✅ FocusState 동기화
+        .onChange(of: searchVM.isFocused) { newValue in
+            if isSearchFieldFocused != newValue {
+                isSearchFieldFocused = newValue
+            }
+        }
+        .onChange(of: isSearchFieldFocused) { newValue in
+            if searchVM.isFocused != newValue {
+                searchVM.isFocused = newValue
+            }
+        }
+
+        .overlay(alignment: .bottom) {
+            if showToast {
+                ToastView(message: toastMessage)
+                    .padding(.bottom, 74 + 24)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .zIndex(999)
+            }
+        }
+
         .safeAreaInset(edge: .bottom, spacing: 0) {
             GeometryReader { geo in
                 VStack(spacing: 0) {
                     SearchBarView(
-                        text: $searchText,
+                        vm: searchVM,
                         placeholder: "검색",
-                        onSearchTap: { print("검색:", searchText) },
-                        focus: $isSearchFocused,
-                        isFocused: Binding(
-                            get: { isSearchFocused },
-                            set: { isSearchFocused = $0 }
-                        )
+                        onSearchTap: { print("검색:", searchVM.text) },
+                        focus: $isSearchFieldFocused
                     )
                     .padding(.horizontal, 16)
                     .padding(.top, 10)
@@ -106,9 +125,7 @@ struct Mainpage_View: View {
                 }
                 .frame(maxWidth: .infinity)
                 .background(Color.white.opacity(0.95))
-                .clipShape(
-                    RoundedCorner(radius: 30, corners: [.topLeft, .topRight])
-                )
+                .clipShape(RoundedCorner(radius: 30, corners: [.topLeft, .topRight]))
                 .overlay(
                     RoundedCorner(radius: 30, corners: [.topLeft, .topRight])
                         .stroke(Color.black.opacity(0.08), lineWidth: 1)
@@ -119,34 +136,26 @@ struct Mainpage_View: View {
     }
 }
 
-// MARK: - ✅ 여기! 검색 오버레이(세로 음료 리스트)
+// MARK: - 검색 오버레이
 private extension Mainpage_View {
     var searchOverlay: some View {
         let items = searchedItems
-        let q = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let q = searchVM.text.trimmingCharacters(in: .whitespacesAndNewlines)
 
         return ZStack(alignment: .top) {
             Color.white
                 .ignoresSafeArea()
-                .onTapGesture {
-                    isSearchFocused = false
-                    hideKeyboard()
-                }
+                .onTapGesture { closeSearch() }
 
-            // ✅✅✅ 바로 "여기"에 넣으면 됨 (원래 ScrollView 자리)
             if !q.isEmpty && items.isEmpty {
                 VStack {
                     Spacer()
-
                     SearchEmpty_View()
-                        .padding(.bottom, -125)   // ✅ 검색창 테두리 기준 위로 100pt
-
+                        .padding(.bottom, -125)
                     Spacer()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .safeAreaInset(edge: .bottom) {
-                    Color.clear.frame(height: 74) // ✅ 아래 검색창 패널(고정 높이) 만큼 자리 예약
-                }
+                .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 74) }
 
             } else {
                 ScrollView {
@@ -154,11 +163,7 @@ private extension Mainpage_View {
                         ForEach(items) { item in
                             MenuListRow(
                                 model: item,
-                                onToggleBookmark: {
-                                    if let idx = cards.firstIndex(where: { $0.id == item.id }) {
-                                        cards[idx].isBookmarked.toggle()
-                                    }
-                                }
+                                onToggleBookmark: { vm.toggleBookmark(id: item.id) }
                             )
                         }
                     }
@@ -171,40 +176,67 @@ private extension Mainpage_View {
     }
 
     var searchedItems: [MenuCardModel] {
-        let q = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        if q.isEmpty {
-            return cards
-        }
-        return cards.filter {
+        let q = searchVM.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if q.isEmpty { return vm.cards }
+        return vm.cards.filter {
             $0.title.localizedCaseInsensitiveContains(q) ||
             $0.subtitle.localizedCaseInsensitiveContains(q) ||
             $0.lines.joined(separator: " ").localizedCaseInsensitiveContains(q)
         }
     }
 
+    func closeSearch() {
+        searchVM.close()
+        isSearchFieldFocused = false
+        hideKeyboard()
+    }
+
     func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
                                         to: nil, from: nil, for: nil)
     }
+
+    func presentToast(_ message: String) {
+        toastMessage = message
+        withAnimation(.easeOut(duration: 0.2)) {
+            showToast = true
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+            withAnimation(.easeIn(duration: 0.2)) {
+                showToast = false
+            }
+        }
+    }
 }
 
-// MARK: - RoundedCorner Shape
+// 토스트 메시지 뷰
+private struct ToastView: View {
+    let message: String
+    var body: some View {
+        Text(message)
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundColor(.white)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(Color.gray.opacity(0.85))
+            .clipShape(Capsule())
+            .shadow(radius: 6, y: 3)
+    }
+}
+
+// 모달, 검색창 모서리 처리
 private struct RoundedCorner: Shape {
     var radius: CGFloat
     var corners: UIRectCorner
-
     func path(in rect: CGRect) -> Path {
-        let path = UIBezierPath(
+        Path(UIBezierPath(
             roundedRect: rect,
             byRoundingCorners: corners,
             cornerRadii: CGSize(width: radius, height: radius)
-        )
-        return Path(path.cgPath)
+        ).cgPath)
     }
 }
 
 #Preview("Mainpage_View") {
-    NavigationStack {
-        Mainpage_View()
-    }
+    NavigationStack { Mainpage_View() }
 }

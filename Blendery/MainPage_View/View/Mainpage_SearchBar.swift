@@ -2,18 +2,15 @@ import SwiftUI
 import UIKit
 
 struct SearchBarView: View {
-    @Binding var text: String
+    @ObservedObject var vm: SearchBarViewModel
+
     var placeholder: String = "검색"
     var onSearchTap: (() -> Void)? = nil
 
+    // 키보드 포커스는 View에서만 관리 (VM에 넣지 않는 게 정석)
     var focus: FocusState<Bool>.Binding? = nil
-    @Binding var isFocused: Bool
 
     private let orange = Color(red: 0.89, green: 0.19, blue: 0)
-
-    private var hasText: Bool {
-        !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
 
     var body: some View {
         HStack(spacing: 10) {
@@ -21,7 +18,7 @@ struct SearchBarView: View {
             // ✅ 검색창(테두리 있는 박스)
             HStack(spacing: 10) {
 
-                // ✅ 돋보기: 항상 왼쪽 고정(절대 안 사라짐)
+                // ✅ 돋보기: 항상 왼쪽 고정
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(orange)
@@ -30,12 +27,12 @@ struct SearchBarView: View {
                 // ✅ 텍스트필드
                 Group {
                     if let focus {
-                        TextField(placeholder, text: $text)
+                        TextField(placeholder, text: $vm.text)
                             .focused(focus)
-                            .onTapGesture { isFocused = true }
+                            .onTapGesture { vm.open() }
                     } else {
-                        TextField(placeholder, text: $text)
-                            .onTapGesture { isFocused = true }
+                        TextField(placeholder, text: $vm.text)
+                            .onTapGesture { vm.open() }
                     }
                 }
                 .font(.system(size: 16))
@@ -45,9 +42,9 @@ struct SearchBarView: View {
 
                 Spacer()
 
-                // ✅ 검색 켜졌고 + 텍스트 있을 때만: 오른쪽 전체 지우기 X
-                if isFocused && hasText {
-                    Button { text = "" } label: {
+                // ✅ 검색 켜졌고 + 텍스트 있을 때만: 오른쪽 전체 지우기 X(작은거)
+                if vm.isFocused && vm.hasText {
+                    Button { vm.clearText() } label: {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 18))
                             .foregroundColor(.gray.opacity(0.7))
@@ -55,7 +52,6 @@ struct SearchBarView: View {
                     }
                     .buttonStyle(.plain)
                 } else {
-                    // ✅ 오른쪽 여백 유지(레이아웃 흔들림 방지)
                     Color.clear
                         .frame(width: 18, height: 18)
                         .padding(.trailing, 14)
@@ -69,10 +65,9 @@ struct SearchBarView: View {
             .frame(height: 50)
 
             // ✅ 오른쪽 큰 X(검색 종료)
-            if isFocused {
+            if vm.isFocused {
                 Button {
-                    text = ""
-                    isFocused = false
+                    vm.close()
                     if let focus { focus.wrappedValue = false }
                     hideKeyboard()
                 } label: {
