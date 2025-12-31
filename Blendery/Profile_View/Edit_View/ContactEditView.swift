@@ -18,9 +18,10 @@ struct ContactEditView: View {
                     title: title,
                     content: AnyView(
                         TextField(
-                            currentValue,
+                            formattedPlaceholder,
                             text: $text
                         )
+                        .id(type)
                         .font(.system(size: 15))
                         .keyboardType(type.keyboard)
                         .focused($isFocused)
@@ -30,6 +31,13 @@ struct ContactEditView: View {
                         .onChange(of: text) { newValue in
                             guard type == .phone else { return }
                             text = formatPhoneNumber(newValue)
+                        }
+                        .onChange(of: text) { newValue in
+                            guard type == .email else { return }
+                            let lowercased = newValue.lowercased()
+                            if lowercased != newValue {
+                                text = lowercased
+                            }
                         }
                     ),
                     onTap: nil,
@@ -44,25 +52,25 @@ struct ContactEditView: View {
             .padding(.top, 16)
 
             Button {
-                guard !text.isEmpty else {
-                    dismiss()
-                    return
-                }
+                guard isButtonEnabled else { return }
 
                 if text != currentValue {
                     applyChange()
                 }
-
                 dismiss()
             } label: {
                 Text("완료")
                     .font(.system(size: 15))
-                    .foregroundColor(.black)
+                    .foregroundColor(isButtonEnabled ? .black : .gray)
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
                     .background(
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(Color(red: 247/255, green: 247/255, blue: 247/255))
+                            .fill(
+                                isButtonEnabled
+                                ? Color(red: 247/255, green: 247/255, blue: 247/255)
+                                : Color(red: 235/255, green: 235/255, blue: 235/255)
+                            )
                             .overlay(
                                 RoundedRectangle(cornerRadius: 12)
                                     .stroke(
@@ -71,7 +79,9 @@ struct ContactEditView: View {
                                     )
                             )
                     )
+                    .opacity(isButtonEnabled ? 1.0 : 0.6)
             }
+            .disabled(!isButtonEnabled)
             .onChange(of: text) { newValue in
                 guard type == .phone else { return }
                 text = formatPhoneNumber(newValue)
@@ -87,12 +97,27 @@ struct ContactEditView: View {
         .padding()
         .navigationTitle(ContactEditType.navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .task {
+        .onAppear {
             text = ""
-            try? await Task.sleep(nanoseconds: 300_000_000)
-            isFocused = true
+
+            DispatchQueue.main.async {
+                isFocused = true
+            }
+            
+            #if DEBUG
+            if !ProcessInfo.processInfo.environment.keys.contains("XCODE_RUNNING_FOR_PREVIEWS") {
+                DispatchQueue.main.async {
+                    isFocused = true
+                }
+            }
+            #else
+            DispatchQueue.main.async {
+                isFocused = true
+            }
+            #endif
         }
     }
+    
 
     // MARK: - Computed Properties
 
@@ -145,7 +170,32 @@ struct ContactEditView: View {
         let numbers = text.filter { $0.isNumber }
         return numbers.count == 11
     }
+    
+    private var formattedPlaceholder: String {
+        switch type {
+        case .phone:
+            return formatPhoneNumber(currentValue)
+        case .email:
+            return currentValue
+        }
+    }
 
+    private var isButtonEnabled: Bool {
+        switch type {
+        case .phone:
+            return isValidPhoneNumber
+        case .email:
+            return isValidEmail
+        }
+    }
+    
+    private var isValidEmail: Bool {
+        let emailRegex =
+        #"^[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"#
+        
+        return NSPredicate(format: "SELF MATCHES %@", emailRegex)
+            .evaluate(with: text)
+    }
 }
 
 
@@ -154,13 +204,14 @@ struct ContactEditView: View {
         name: "이지수",
         role: "매니저",
         joinedAt: "2010.12.25~",
-        phone: "010-7335-1790",
+        phone: "01073351790",
         email: "l_oxo_l@handong.ac.kr"
     )
 
     let mockViewModel = ProfileViewModel(profile: mockProfile)
 
     NavigationStack {
-        ContactEditView(viewModel: mockViewModel, type: .phone)
+        ContactEditView(viewModel: mockViewModel, type: .email)
     }
 }
+
