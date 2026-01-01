@@ -8,49 +8,28 @@
 import SwiftUI
 
 struct LoginView: View {
-    
-    
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color.black
-                    .ignoresSafeArea()
-                VStack {
-                    Spacer()
-                    
-                    Login_Logo()
-                        .padding(.bottom,38)
-                    
-                    Login_ID_PW()
-                    
-                    Login_AutoLogin()
-                        .padding(.vertical, 16)
-                        
-                    Login_Button()
-                        
-                        
+        VStack(spacing: 0) {
+            Login_ID_PW()
 
-                    Spacer()
-                }
-                    .padding(.horizontal, 50)
-            }
-            
+            Login_AutoLogin()
+                .padding(.vertical, 16)
+
+            Login_Button()
         }
-        
+        .frame(maxWidth: .infinity)     // ⭐️ 내부 레이아웃 폭 안정화
+        .padding(.horizontal, 50)
     }
 }
 
-
-
-// 로그인 성공 후 보여질 홈 화면 예시
-// 로그인 성공 후 보여지는 HomeView라고 가정
-
-
-
-// 미리보기
 struct LoginView_Previews: PreviewProvider {
     static var previews: some View {
-        LoginView()
+        NavigationStack {
+            ZStack {
+                Color.black.ignoresSafeArea()
+                LoginView()
+            }
+        }
     }
 }
 
