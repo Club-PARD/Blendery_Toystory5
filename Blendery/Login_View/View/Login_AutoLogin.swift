@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct Login_AutoLogin: View {
-    @State private var isAutoLogin = false
+    @State private var isAutoLogin = false // 체크박스 on/off 상태를 저장하는 화면용 상태 변수
 
     var body: some View {
         HStack {
@@ -16,6 +16,7 @@ struct Login_AutoLogin: View {
                 isAutoLogin.toggle()
             } label: {
                 HStack(spacing: 8) {
+                    // 체크박스 상태값에 따라 아이콘이 바뀜
                     Image(systemName: isAutoLogin ? "checkmark.square.fill" : "square")
                         .font(.system(size: 20))
 

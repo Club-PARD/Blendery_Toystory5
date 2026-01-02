@@ -108,14 +108,13 @@ private extension Mainpage_ScrollView {
                             onSelect: { onSelectMenu(item) }
                         )
 
-                        // ✅ 마지막 줄 밑에는 구분선 안 넣고 싶으면 이렇게
                         if idx != items.count - 1 {
                             Divider()
-                                .padding(.leading, 16) // 이미지/텍스트 정렬 맞추고 싶으면
+                                .padding(.leading, 16)
                         }
                     }
                 }
-                .background(Color.white) // Divider가 깔끔하게 보이게 (원하면 제거)
+                .background(Color.white)
             }
         }
     }
@@ -132,8 +131,8 @@ private struct MenuCardView: View {
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color.white)
             Color.clear
-                            .contentShape(Rectangle())
-                            .onTapGesture { onSelect() }
+                .contentShape(Rectangle())
+                .onTapGesture { onSelect() }
 
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 6) {
@@ -187,7 +186,6 @@ struct MenuListRow: View {
 
     var body: some View {
         Button(action: onSelect){
-            // TODO: 상세화면 이동 등
             HStack(spacing: 12) {
 
                 rowImage
@@ -219,12 +217,11 @@ struct MenuListRow: View {
     }
 
     private var rowImage: some View {
-        // ✅ 1) 로딩 중이면 로딩용 이미지(또는 스켈레톤)
         if model.isImageLoading {
             return AnyView(
                 ZStack {
                     Color.white
-                    Image("vertical loading") // ✅ 너가 넣고 싶은 로딩용 이미지
+                    Image("vertical loading")
                         .resizable()
                         .scaledToFit()
                         .padding(8)
@@ -232,7 +229,6 @@ struct MenuListRow: View {
             )
         }
 
-        // ✅ 2) 로딩 끝났고 실제 이미지가 있으면 그 이미지
         let name = model.imageName ?? model.title
         if UIImage(named: name) != nil {
             return AnyView(
@@ -242,11 +238,10 @@ struct MenuListRow: View {
             )
         }
 
-        // ✅ 3) 로딩 끝났는데도 이미지가 없으면 “대체 이미지”
         return AnyView(
             ZStack {
                 Color(red: 0.95, green: 0.95, blue: 0.95)
-                Image("loading") // ✅ 이미지 없을 때 보여줄 대체 이미지
+                Image("loading")
                     .resizable()
                     .scaledToFit()
                     .padding(8)

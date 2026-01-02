@@ -55,7 +55,7 @@ struct SeasonCarouselView: View {
                             GeometryReader { geo in
                                 let baseScale = scaleForCard(geo: geo, outer: outer)
                                 let isCenter = (focusedID == loop.id)
-                                let xScale = baseScale * (isCenter ? 1.1 : 1.00)   // 가로 3%만
+                                let xScale = baseScale * (isCenter ? 1.1 : 1.00)
                                 let yScale = baseScale * (isCenter ? 1.15 : 1.00)
 
                                 SeasonCard(
@@ -84,7 +84,7 @@ struct SeasonCarouselView: View {
                     }
                     .scrollTargetLayout()
                     .padding(.top, topOffset)
-                    .padding(.bottom, (cardHeight * extraCenterScale / 2) + 10) // ✅ 6 없애기
+                    .padding(.bottom, (cardHeight * extraCenterScale / 2) + 10)
                 }
                 .contentMargins(.horizontal, sideMargin, for: .scrollContent)
                 .scrollTargetBehavior(.viewAligned(limitBehavior: .always))
@@ -97,13 +97,12 @@ struct SeasonCarouselView: View {
                     }
                 }
             }
-            .frame(height: cardHeight * maxScale + topOffset + 16) // ✅ +6 제거
+            .frame(height: cardHeight * maxScale + topOffset + 16)
 
             indicatorView
-                
                 .padding(.bottom, 14)
         }
-        .background(Color.clear)       // ✅ 여기서 배경을 한 덩어리로 통일(필요시 Color.white로)
+        .background(Color.clear)
         .onAppear {
             if focusedID == nil, let first = items.first {
                 let startID = LoopItem.makeID(copy: 2, originalID: first.id)
@@ -178,8 +177,6 @@ private struct LoopItem: Identifiable {
     }
 }
 
-
-
 // MARK: - Card UI
 private struct SeasonCard: View {
     let item: MenuCardModel
@@ -223,12 +220,12 @@ private struct SeasonCard: View {
                 .frame(maxWidth: .infinity)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .background(Color.white) // ✅ 배경을 카드 본체에
+            .background(Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 18))
             .overlay(
                 RoundedRectangle(cornerRadius: 18)
                     .stroke(Color.gray.opacity(0.25), lineWidth: 1)
-            )// ✅ 카드 본체를 실제로 자름
+            )
 
             Text("NEW")
                 .font(.system(size: 12, weight: .semibold))
@@ -238,9 +235,10 @@ private struct SeasonCard: View {
                 .background(Color(red: 0.14, green: 0.24, blue: 0.51))
                 .clipShape(RoundedRectangle(cornerRadius: 6))
                 .padding(.top, 28)
-                .padding(.trailing, 24)   // 오른쪽
+                .padding(.trailing, 24)
         }
     }
+
     private var imageView: some View {
         let name = item.title
         if UIImage(named: name) != nil {
@@ -248,7 +246,6 @@ private struct SeasonCard: View {
                 Image(name)
                     .resizable()
                     .scaledToFit()
-                    
             )
         } else {
             return AnyView(
@@ -257,7 +254,7 @@ private struct SeasonCard: View {
                     Image("loading")
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 125, height:125)
+                        .frame(width: 125, height: 125)
                 }
             )
         }
@@ -265,12 +262,11 @@ private struct SeasonCard: View {
 }
 
 #Preview("SeasonCarouselView - 시즌메뉴") {
-    // ✅ 프리뷰용 더미 데이터 (네 MenuCardModel init 시그니처에 맞춰서)
     let demoItems: [MenuCardModel] = [
         MenuCardModel(
             category: "시즌메뉴",
             tags: ["NEW"],
-            title: "아메리카노",      // ✅ 에셋에 이미지 없으면 loading으로 뜸
+            title: "아메리카노",
             subtitle: "논커피 | ICED Only",
             lines: ["진한 원두", "깔끔한 맛"],
             isBookmarked: true

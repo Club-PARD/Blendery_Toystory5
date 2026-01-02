@@ -1,7 +1,7 @@
 import SwiftUI
 import Combine
 
-//  토스트 데이터 타입 추가 (onChange 요구사항 때문에 Equatable)
+//  토스트 데이터 타입 (onChange 요구사항 때문에 Equatable)
 struct ToastData: Identifiable, Equatable {
     let id = UUID()
     let iconName: String?
@@ -30,18 +30,15 @@ final class MainpageViewModel: ObservableObject {
         guard let idx = cards.firstIndex(where: { $0.id == id }) else { return }
 
         cards[idx].isBookmarked.toggle()
-        
         cards = cards
 
-        //  해제됐을 때만 토스트
         if cards[idx].isBookmarked == false {
-                    toast = ToastData(iconName: "토스트 체크", message: "즐겨찾기가 해제되었습니다.")
-                } else {
-                    toast = ToastData(iconName: "토스트 체크", message: "즐겨찾기에 추가되었습니다.")
-                }
+            toast = ToastData(iconName: "토스트 체크", message: "즐겨찾기가 해제되었습니다.")
+        } else {
+            toast = ToastData(iconName: "토스트 체크", message: "즐겨찾기에 추가되었습니다.")
+        }
     }
 
-    //  Mainpage_View에서 호출하던 함수 추가
     func clearToast() {
         toast = nil
     }

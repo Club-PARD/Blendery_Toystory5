@@ -8,11 +8,27 @@
 import SwiftUI
 
 struct Toastmessage_View: View {
+    let message: String
+    let iconName: String?
+
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        HStack(spacing: 8) {
+            if let iconName {
+                Image(iconName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 18, height: 18)
+            }
+
+            Text(message)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.white)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background(Color.gray.opacity(0.85))
+        .clipShape(Capsule())
+        .shadow(radius: 6, y: 3)
     }
 }
 
-#Preview {
-    Toastmessage_View()
-}

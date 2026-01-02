@@ -8,24 +8,40 @@
 import SwiftUI
 
 struct Login_ID_PW: View {
+
+    // 상태/서버 공통 변수
+    // - LoginViewModel을 View에서 관찰하기 위한
+    // - 여기서는 email/password 입력값(서버로 보낼 데이터)을 저장하는 용도
+    // - errorMessage는 UI에서 빨간 테두리/에러 텍스트 표시용 상태로도 사용
     @StateObject private var viewModel = LoginViewModel()
+
+    // 상태 변수
+    // - 비밀번호를 보이게/가리게 하는 UI 상태
     @State private var isPasswordVisible: Bool = false
     
     var body: some View {
+
         VStack() {
+            // ID
             ZStack(alignment: .leading) {
+
+                // UI 상태 반영
+                // - email이 비어있을 때만 placeholder(Text "ID")를 보여줌
                 if viewModel.email.isEmpty {
                     Text("ID")
                         .foregroundColor(Color(red: 0.53, green: 0.53, blue: 0.53))
-                        .padding(.leading, 20) // 위치 미세 조정
+                        .padding(.leading, 20)
                         .font(.system(size: 18))
                 }
-                
+
+                // [서버 요청 데이터 바인딩]
+                // - text: $viewModel.email → 사용자가 입력하는 값이 viewModel.email에 실시간 저장됨
+                // - login() 호출 시 LoginRequest(email:password:)에 들어갈 값
                 TextField("", text: $viewModel.email)
-                    .padding(.horizontal, 20) // ✨ 상하 패딩 제거, 좌우만 줌
-                    .frame(height: 45) // 텍스트필드 자체 높이 확보
+                    .padding(.horizontal, 20)
+                    .frame(height: 45)
                     .foregroundColor(.white)
-                    .accentColor(.white) // ✨ 커서 색상 흰색으로
+                    .accentColor(.white)
                     .autocapitalization(.none)
                     .disableAutocorrection(true)
             }
@@ -39,29 +55,41 @@ struct Login_ID_PW: View {
         }
         .padding(.bottom, 8)
         
-        // ─── [수정됨] 비밀번호 입력 ───
+        // 비번
         VStack() {
             ZStack(alignment: .leading) {
+
+                // UI 상태 반영
+                // - password가 비어있을 때만 placeholder(Text "Password")를 보여줌
                 if viewModel.password.isEmpty {
                     Text("Password")
                         .foregroundColor(Color(red: 0.53, green: 0.53, blue: 0.53))
                         .padding(.leading, 20)
                         .font(.system(size: 18))
                 }
-                
+
                 HStack {
+
+                    // 서버 요청 데이터 바인딩
+                    // - text: $viewModel.password → 사용자가 입력하는 값이 viewModel.password에 실시간 저장됨
+                    // - login() 호출 시 LoginRequest(email:password:)에 들어갈 값
+                    //
+                    // UI 상태 반영
+                    // - isPasswordVisible에 따라 TextField(보이기) / SecureField(가리기) 토글
                     if isPasswordVisible {
                         TextField("", text: $viewModel.password)
                             .foregroundColor(.white)
-                            .accentColor(.white) // 커서 흰색
+                            .accentColor(.white)
                             .autocapitalization(.none)
                             .disableAutocorrection(true)
                     } else {
                         SecureField("", text: $viewModel.password)
                             .foregroundColor(.white)
-                            .accentColor(.white) // 커서 흰색
+                            .accentColor(.white)
                     }
-                    
+
+                    // 상태 변경
+                    // - 비밀번호 표시/숨김 토글
                     Button(action: {
                         isPasswordVisible.toggle()
                     }) {
@@ -72,15 +100,18 @@ struct Login_ID_PW: View {
                 .padding(.horizontal, 20)
                 .frame(height: 45)
             }
+
             .background(Color(red: 0.15, green: 0.15, blue: 0.15))
             .cornerRadius(30)
             .frame(width: 310, height: 45)
+
+            // - errorMessage가 있으면 빨간 테두리 errorMessage가 없으면 기본 테두리
             .overlay(
                 RoundedRectangle(cornerRadius: 30)
                     .stroke(viewModel.errorMessage != nil ? Color.red : Color(red: 0.15, green: 0.15, blue: 0.15), lineWidth: 1)
             )
             
-            // 에러 메시지
+            // - viewModel.errorMessage는 로그인 실패 시(LoginViewModel.login() catch) 세팅되는 UI 상태
             if let errorMessage = viewModel.errorMessage {
                 Text(errorMessage)
                     .foregroundColor(.red)
@@ -91,7 +122,6 @@ struct Login_ID_PW: View {
         }
     }
 }
-
 #Preview {
     Login_ID_PW()
 }

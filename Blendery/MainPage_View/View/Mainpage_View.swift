@@ -1,3 +1,8 @@
+//
+//  Mainpage_View.swift
+//  Blendery
+//
+
 import SwiftUI
 import UIKit
 
@@ -6,6 +11,7 @@ struct Mainpage_View: View {
     @State private var showStoreModal: Bool = false
     @State private var selectedCategory: String = "즐겨찾기"
 
+    //  토스트 상태 변수
     @State private var toastMessage: String = ""
     @State private var toastIconName: String? = nil
     @State private var showToast: Bool = false
@@ -22,7 +28,6 @@ struct Mainpage_View: View {
     @FocusState private var isSearchFieldFocused: Bool
     
     @State private var selectedMenu: MenuCardModel? = nil
-    
     @State private var showProfile = false
 
     var body: some View {
@@ -35,9 +40,11 @@ struct Mainpage_View: View {
                 Mainpage_TopMenu(
                     onTapStoreButton: {
                         withAnimation(.easeInOut(duration: 0.25)) { showStoreModal = true }
-                    },onTapProfileButton: {           // ✅ 추가
+                    },
+                    onTapProfileButton: {
                         showProfile = true
-                    },                    selectedCategory: $selectedCategory,
+                    },
+                    selectedCategory: $selectedCategory,
                     vm: topMenuVM
                 )
                 .background(Color.white)
@@ -85,12 +92,12 @@ struct Mainpage_View: View {
                 .zIndex(100)
             }
         }
-        
         .navigationBarBackButtonHidden(true)
+
         .navigationDestination(item: $selectedMenu) { menu in
-            DetailRecipeView(menu: menu, allMenus: vm.cards) // ✅ 전체 전달
+            DetailRecipeView(menu: menu, allMenus: vm.cards)
         }
-        
+
         .navigationDestination(isPresented: $showProfile) {
             ProfileView(
                 profile: UserProfile(
@@ -122,9 +129,10 @@ struct Mainpage_View: View {
             }
         }
 
+        // 토스트 메시지 호출
         .overlay(alignment: .bottom) {
             if showToast {
-                ToastView(message: toastMessage, iconName: toastIconName)
+                Toastmessage_View(message: toastMessage, iconName: toastIconName)
                     .padding(.bottom, 20)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                     .zIndex(999)
@@ -221,6 +229,7 @@ private extension Mainpage_View {
                                         to: nil, from: nil, for: nil)
     }
 
+    //  토스트 표시 트리거(상태만 바꿈)
     func presentToast(_ data: ToastData) {
         toastMessage = data.message
         toastIconName = data.iconName
@@ -233,32 +242,6 @@ private extension Mainpage_View {
                 showToast = false
             }
         }
-    }
-}
-
-// 토스트 메시지 뷰
-private struct ToastView: View {
-    let message: String
-    let iconName: String?
-
-    var body: some View {
-        HStack(spacing: 8) {
-            if let iconName {
-                Image(iconName)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 18, height: 18)
-            }
-
-            Text(message)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(.white)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .background(Color.gray.opacity(0.85))
-        .clipShape(Capsule())
-        .shadow(radius: 6, y: 3)
     }
 }
 
@@ -278,4 +261,3 @@ private struct RoundedCorner: Shape {
 #Preview("Mainpage_View") {
     NavigationStack { Mainpage_View() }
 }
-
