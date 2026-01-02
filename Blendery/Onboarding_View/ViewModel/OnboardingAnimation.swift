@@ -8,11 +8,11 @@ struct OnboardingAnimationView: View {
     @State private var logoY: CGFloat = 0
     @State private var showLoginUI = false
 
-    private let logoSize: CGFloat = 120
+    private let logoSize: CGFloat = 140
     private let gapToField: CGFloat = 120
 
     //  끝 위치(로고 최종 위치)용: 그대로 유지
-    private let logoOnlyOffset: CGFloat = 360
+    private let logoOnlyOffset: CGFloat = 400
 
     //  로고+로그인 UI 같이 내리기(배경 제외): 그대로 유지
     private let wholeYOffset: CGFloat = 60
@@ -49,7 +49,7 @@ struct OnboardingAnimationView: View {
                         .animation(.easeInOut(duration: 0.25), value: showLoginUI)
                         .allowsHitTesting(showLoginUI)
 
-                    Image("로고")
+                    Image("온보딩 로고")
                         .resizable()
                         .scaledToFit()
                         .frame(width: logoSize, height: logoSize)

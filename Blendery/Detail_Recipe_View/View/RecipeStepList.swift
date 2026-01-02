@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct RecipeStepList: View {
-    let steps = mockRecipeSteps
+    let steps: [String]
 
     var body: some View {
         ScrollView {
@@ -17,11 +17,12 @@ struct RecipeStepList: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .fontWeight(.regular)
                 .padding(.leading, 8)
+
             VStack(spacing: 12) {
-                ForEach(Array(steps.enumerated()), id: \.element.id) { index, step in
+                ForEach(Array(steps.enumerated()), id: \.offset) { index, text in
                     RecipeStepCell(
                         index: index + 1,
-                        text: step.text
+                        text: text
                     )
                 }
             }
@@ -30,5 +31,5 @@ struct RecipeStepList: View {
 }
 
 #Preview {
-    RecipeStepList()
+    RecipeStepList(steps: ["에스프레소 2샷", "우유 윗선까지", "얼음 9부 채우기"])
 }

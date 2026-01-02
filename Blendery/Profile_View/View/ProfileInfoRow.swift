@@ -18,9 +18,7 @@ struct ProfileInfoRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.system(size: 14))
-                    .foregroundColor(
-                        Color(red: 136/255, green: 136/255, blue: 136/255)
-                    )
+                    .foregroundColor(Color(red: 136/255, green: 136/255, blue: 136/255))
 
                 content
             }
@@ -28,16 +26,15 @@ struct ProfileInfoRow: View {
 
             Spacer()
 
-            if showsChevron, let onTap {
-                Button(action: onTap) {
-                    Image(systemName: "chevron.right")
-                        .foregroundColor(.gray)
-                        .font(.system(size: 24))
-                }
-                .buttonStyle(.plain)
+            if showsChevron {
+                Image(systemName: "chevron.right")
+                    .foregroundColor(.gray)
+                    .font(.system(size: 18, weight: .semibold))
             }
         }
         .padding(.horizontal, 23)
         .padding(.vertical, 12)
+        .contentShape(Rectangle())           
+        .onTapGesture { onTap?() }
     }
 }

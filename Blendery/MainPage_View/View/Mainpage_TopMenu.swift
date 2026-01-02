@@ -9,6 +9,7 @@ private struct CategoryFrameKey: PreferenceKey {
 
 struct Mainpage_TopMenu: View {
     let onTapStoreButton: () -> Void
+    let onTapProfileButton: () -> Void
     @Binding var selectedCategory: String
     @ObservedObject var vm: TopMenuViewModel
 
@@ -38,7 +39,7 @@ struct Mainpage_TopMenu: View {
                     .font(.system(size: 34, weight: .bold))
                 Spacer()
 
-                Button(action: {}) {
+                Button(action: onTapProfileButton) {
                     Image("사람")
                         .resizable()
                         .frame(width: 24, height: 24)
@@ -102,6 +103,7 @@ struct Mainpage_TopMenu: View {
 #Preview {
     Mainpage_TopMenu(
         onTapStoreButton: {},
+        onTapProfileButton: {},
         selectedCategory: .constant("즐겨찾기"),
         vm: TopMenuViewModel(categories: ["즐겨찾기", "커피", "논커피", "아이스크림", "에이드"])
     )

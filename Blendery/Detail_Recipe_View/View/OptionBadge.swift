@@ -8,16 +8,18 @@
 import SwiftUI
 
 struct OptionBadge: View {
+    let tags: [String]
+
     var body: some View {
         HStack(spacing: 0) {
-            optionText("ICE")
-                .padding(.horizontal, 8)
-            verticalDivider()
-            optionText("XL")
-                .padding(.horizontal, 8)
-            verticalDivider()
-            optionText("HERE")
-                .padding(.horizontal, 8)
+            ForEach(Array(tags.prefix(3).enumerated()), id: \.offset) { idx, t in
+                optionText(t)
+                    .padding(.horizontal, 8)
+
+                if idx != min(tags.count, 3) - 1 {
+                    verticalDivider()
+                }
+            }
         }
         .frame(height: 28.7)
         .background(
@@ -40,7 +42,7 @@ private func verticalDivider() -> some View {
         .scaleEffect(x: 0.3, y: 1, anchor: .center)
 }
 
-#Preview {
-    OptionBadge()
-}
+//#Preview {
+//    OptionBadge()
+//}
 

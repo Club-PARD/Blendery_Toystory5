@@ -10,7 +10,7 @@ import SwiftUI
 struct RecipeStepCell: View {
     let index: Int
     let text: String
-    
+
     var body: some View {
         HStack(spacing: 11) {
             Text("\(index)")
@@ -19,7 +19,7 @@ struct RecipeStepCell: View {
                 .frame(width: 32, height: 32)
                 .background(Color(red: 246/255, green: 246/255, blue: 246/255, opacity: 1))
                 .clipShape(Circle())
-            
+
             Text(text)
                 .font(.system(size: 16, weight: .medium))
                 .foregroundColor(.black)

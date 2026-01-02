@@ -18,9 +18,10 @@ private struct CardHeightKey: PreferenceKey {
 struct Mainpage_ScrollView: View {
     let selectedCategory: String
     @ObservedObject var vm: MainpageViewModel
+    var onSelectMenu: (MenuCardModel) -> Void = { _ in }
 
     @State private var measuredHeights: [UUID: CGFloat] = [:]
-
+    
     var body: some View {
         if selectedCategory == "즐겨찾기" {
             favoriteMasonryView
@@ -43,7 +44,8 @@ private extension Mainpage_ScrollView {
                     ForEach(columns.left) { item in
                         MenuCardView(
                             model: item,
-                            onToggleBookmark: { vm.toggleBookmark(id: item.id) }
+                            onToggleBookmark: { vm.toggleBookmark(id: item.id) },
+                            onSelect: { onSelectMenu(item) }
                         )
                         .background(
                             GeometryReader { geo in
@@ -60,7 +62,8 @@ private extension Mainpage_ScrollView {
                     ForEach(columns.right) { item in
                         MenuCardView(
                             model: item,
-                            onToggleBookmark: { vm.toggleBookmark(id: item.id) }
+                            onToggleBookmark: { vm.toggleBookmark(id: item.id) },
+                            onSelect: { onSelectMenu(item) }
                         )
                         .background(
                             GeometryReader { geo in
@@ -84,23 +87,31 @@ private extension Mainpage_ScrollView {
 
 // MARK: - NORMAL: 리스트(세로로 쭉)
 private extension Mainpage_ScrollView {
-    
+
     @ViewBuilder
     var normalListView: some View {
         let items = vm.normalItems(for: selectedCategory)
-        
+
         if selectedCategory == "시즌메뉴" {
-            SeasonCarouselView(items: items)
+            SeasonCarouselView(items: items, onSelectMenu: onSelectMenu)
         } else {
             ScrollView {
                 LazyVStack(spacing: 0) {
-                    ForEach(items) { item in
+                    ForEach(Array(items.enumerated()), id: \.element.id) { idx, item in
                         MenuListRow(
                             model: item,
-                            onToggleBookmark: { vm.toggleBookmark(id: item.id) }
+                            onToggleBookmark: { vm.toggleBookmark(id: item.id) },
+                            onSelect: { onSelectMenu(item) }
                         )
+
+                        // ✅ 마지막 줄 밑에는 구분선 안 넣고 싶으면 이렇게
+                        if idx != items.count - 1 {
+                            Divider()
+                                .padding(.leading, 16) // 이미지/텍스트 정렬 맞추고 싶으면
+                        }
                     }
                 }
+                .background(Color.white) // Divider가 깔끔하게 보이게 (원하면 제거)
             }
         }
     }
@@ -110,11 +121,15 @@ private extension Mainpage_ScrollView {
 private struct MenuCardView: View {
     let model: MenuCardModel
     let onToggleBookmark: () -> Void
+    let onSelect: () -> Void
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color.white)
+            Color.clear
+                            .contentShape(Rectangle())
+                            .onTapGesture { onSelect() }
 
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 6) {
@@ -164,11 +179,11 @@ private struct MenuCardView: View {
 struct MenuListRow: View {
     let model: MenuCardModel
     let onToggleBookmark: () -> Void
+    let onSelect: () -> Void
 
     var body: some View {
-        Button(action: {
+        Button(action: onSelect){
             // TODO: 상세화면 이동 등
-        }) {
             HStack(spacing: 12) {
 
                 rowImage
@@ -200,21 +215,38 @@ struct MenuListRow: View {
     }
 
     private var rowImage: some View {
-        let name = model.title
+        // ✅ 1) 로딩 중이면 로딩용 이미지(또는 스켈레톤)
+        if model.isImageLoading {
+            return AnyView(
+                ZStack {
+                    Color.white
+                    Image("vertical loading") // ✅ 너가 넣고 싶은 로딩용 이미지
+                        .resizable()
+                        .scaledToFit()
+                        .padding(8)
+                }
+            )
+        }
+
+        // ✅ 2) 로딩 끝났고 실제 이미지가 있으면 그 이미지
+        let name = model.imageName ?? model.title
         if UIImage(named: name) != nil {
             return AnyView(
                 Image(name)
                     .resizable()
                     .scaledToFill()
             )
-        } else {
-            return AnyView(
-                ZStack {
-                    Color(red: 0.95, green: 0.95, blue: 0.95)
-                    Image(systemName: "cup.and.saucer.fill")
-                        .foregroundColor(.gray)
-                }
-            )
         }
+
+        // ✅ 3) 로딩 끝났는데도 이미지가 없으면 “대체 이미지”
+        return AnyView(
+            ZStack {
+                Color(red: 0.95, green: 0.95, blue: 0.95)
+                Image("loading") // ✅ 이미지 없을 때 보여줄 대체 이미지
+                    .resizable()
+                    .scaledToFit()
+                    .padding(8)
+            }
+        )
     }
 }

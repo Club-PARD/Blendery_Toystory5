@@ -19,14 +19,39 @@ let categories: [String] = [
     "아이스크림"
 ]
 
-struct MenuCardModel: Identifiable {
-    let id = UUID()
-    let category: String        //  추가: 필터링 기준
-    let tags: [String]
+struct MenuCardModel: Identifiable, Hashable {
+    let id: UUID
+    let category: String
+    let tags: [String]          // ✅ 누락돼서 에러났던 부분
     let title: String
     let subtitle: String
     let lines: [String]
     var isBookmarked: Bool
+
+    var isImageLoading: Bool
+    var imageName: String?
+
+    init(
+        id: UUID = UUID(),
+        category: String,
+        tags: [String] = [],
+        title: String,
+        subtitle: String,
+        lines: [String],
+        isBookmarked: Bool,
+        isImageLoading: Bool = false,
+        imageName: String? = nil
+    ) {
+        self.id = id
+        self.category = category
+        self.tags = tags
+        self.title = title
+        self.subtitle = subtitle
+        self.lines = lines
+        self.isBookmarked = isBookmarked
+        self.isImageLoading = isImageLoading
+        self.imageName = imageName
+    }
 }
 
 let menuCardsMock: [MenuCardModel] = [

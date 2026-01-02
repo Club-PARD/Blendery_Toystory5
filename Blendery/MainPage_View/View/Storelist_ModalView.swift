@@ -20,41 +20,56 @@ struct StoreSelectPanel: View {
 
             VStack(spacing: 0) {
                 Button(action: { print("이디야 1호점") }) {
-                    Image("이디야 로고")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 105, height: 11)   // 원하는 크기로 조절
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.vertical, 12)
+                    HStack {
+                        Image("이디야 로고")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 105, height: 11)
+
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 12)
+                    .contentShape(Rectangle()) // ✅ 줄 전체 터치
                 }
                 .buttonStyle(.plain)
-                
+
                 Divider()
-                
-                Button(action: { print("이디야 1호점") }) {
-                    Image("스벅 로고")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 105, height: 11)   // 원하는 크기로 조절
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.vertical, 12)
+
+                Button(action: { print("스벅 1호점") }) {
+                    HStack {
+                        Image("스벅 로고")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 105, height: 11)
+
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 12)
+                    .contentShape(Rectangle()) // ✅ 줄 전체 터치
                 }
                 .buttonStyle(.plain)
-                
+
                 Divider()
-                
-                Button(action: { print("이디야 1호점") }) {
-                    Image("데삼구 로고")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 105, height: 11)   // 원하는 크기로 조절
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.vertical, 12)
+
+                Button(action: { print("데삼구 1호점") }) {
+                    HStack {
+                        Image("데삼구 로고")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 105, height: 11)
+
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 12)
+                    .contentShape(Rectangle()) // ✅ 줄 전체 터치
                 }
                 .buttonStyle(.plain)
             }
         }
-        .padding(16) //  내부 여백만 (cornerRadius/shadow/가로 padding 없음)
+        .padding(16)
     }
 }
 

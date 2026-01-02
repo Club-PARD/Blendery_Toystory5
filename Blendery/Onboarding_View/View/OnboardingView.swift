@@ -16,7 +16,7 @@ struct OnboardingView: View {
             Color.black
                 .ignoresSafeArea()
 
-            Image("로고")
+            Image("온보딩 로고")
                 .resizable()
                 .scaledToFit()
                 .frame(width: 120, height: 120)

@@ -7,6 +7,7 @@ struct Mainpage_View: View {
     @State private var selectedCategory: String = "즐겨찾기"
 
     @State private var toastMessage: String = ""
+    @State private var toastIconName: String? = nil
     @State private var showToast: Bool = false
 
     @StateObject private var vm = MainpageViewModel()
@@ -19,6 +20,10 @@ struct Mainpage_View: View {
     }
 
     @FocusState private var isSearchFieldFocused: Bool
+    
+    @State private var selectedMenu: MenuCardModel? = nil
+    
+    @State private var showProfile = false
 
     var body: some View {
         ZStack {
@@ -30,15 +35,17 @@ struct Mainpage_View: View {
                 Mainpage_TopMenu(
                     onTapStoreButton: {
                         withAnimation(.easeInOut(duration: 0.25)) { showStoreModal = true }
-                    },
-                    selectedCategory: $selectedCategory,
+                    },onTapProfileButton: {           // ✅ 추가
+                        showProfile = true
+                    },                    selectedCategory: $selectedCategory,
                     vm: topMenuVM
                 )
                 .background(Color.white)
 
                 Mainpage_ScrollView(
                     selectedCategory: selectedCategory,
-                    vm: vm
+                    vm: vm,
+                    onSelectMenu: { selectedMenu = $0 }
                 )
                 .id(selectedCategory)
             }
@@ -78,12 +85,28 @@ struct Mainpage_View: View {
                 .zIndex(100)
             }
         }
+        
         .navigationBarBackButtonHidden(true)
+        .navigationDestination(item: $selectedMenu) { menu in
+            DetailRecipeView(menu: menu, allMenus: vm.cards) // ✅ 전체 전달
+        }
+        
+        .navigationDestination(isPresented: $showProfile) {
+            ProfileView(
+                profile: UserProfile(
+                    name: "이지수",
+                    role: "매니저",
+                    joinedAt: "2010.12.25~",
+                    phone: "010-7335-1790",
+                    email: "l_oxo_l@handong.ac.kr"
+                )
+            )
+        }
 
         //  토스트 이벤트 처리
         .onChange(of: vm.toast) { newToast in
             guard let newToast else { return }
-            presentToast(newToast.message)
+            presentToast(newToast)
             vm.clearToast()
         }
 
@@ -101,8 +124,8 @@ struct Mainpage_View: View {
 
         .overlay(alignment: .bottom) {
             if showToast {
-                ToastView(message: toastMessage)
-                    .padding(.bottom, 74 + 24)
+                ToastView(message: toastMessage, iconName: toastIconName)
+                    .padding(.bottom, 20)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                     .zIndex(999)
             }
@@ -164,7 +187,8 @@ private extension Mainpage_View {
                         ForEach(items) { item in
                             MenuListRow(
                                 model: item,
-                                onToggleBookmark: { vm.toggleBookmark(id: item.id) }
+                                onToggleBookmark: { vm.toggleBookmark(id: item.id) },
+                                onSelect: { selectedMenu = item }
                             )
                         }
                     }
@@ -197,8 +221,10 @@ private extension Mainpage_View {
                                         to: nil, from: nil, for: nil)
     }
 
-    func presentToast(_ message: String) {
-        toastMessage = message
+    func presentToast(_ data: ToastData) {
+        toastMessage = data.message
+        toastIconName = data.iconName
+
         withAnimation(.easeOut(duration: 0.2)) {
             showToast = true
         }
@@ -213,15 +239,26 @@ private extension Mainpage_View {
 // 토스트 메시지 뷰
 private struct ToastView: View {
     let message: String
+    let iconName: String?
+
     var body: some View {
-        Text(message)
-            .font(.system(size: 14, weight: .semibold))
-            .foregroundColor(.white)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .background(Color.gray.opacity(0.85))
-            .clipShape(Capsule())
-            .shadow(radius: 6, y: 3)
+        HStack(spacing: 8) {
+            if let iconName {
+                Image(iconName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 18, height: 18)
+            }
+
+            Text(message)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.white)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background(Color.gray.opacity(0.85))
+        .clipShape(Capsule())
+        .shadow(radius: 6, y: 3)
     }
 }
 
@@ -241,3 +278,4 @@ private struct RoundedCorner: Shape {
 #Preview("Mainpage_View") {
     NavigationStack { Mainpage_View() }
 }
+

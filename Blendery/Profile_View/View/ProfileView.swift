@@ -21,9 +21,8 @@ struct ProfileView: View {
         )
     }
     
-    
     var body: some View {
-        NavigationStack {
+        VStack {
             ZStack {
                 VStack(spacing: 24) {
                     ProfileCard(
@@ -77,7 +76,7 @@ struct ProfileView: View {
                     )
                 }
             }
-
+            
             .navigationDestination(isPresented: $showNameEdit) {
                 NameEditView(viewModel: viewModel)
             }
@@ -95,7 +94,7 @@ struct ProfileView: View {
                     showContactEdit = true
                 }
             )
-
+            
             
             Divider()
                 .padding(.horizontal, 20)
@@ -109,7 +108,7 @@ struct ProfileView: View {
                     showContactEdit = true
                 }
             )
-
+            
         }
         .padding(.vertical, 10)
         .background(cardBackground)
@@ -123,10 +122,10 @@ struct ProfileView: View {
                     viewModel.selectPhoto()
                 }
                 .buttonStyle(ProfilePrimaryButtonStyle())
-
+                
                 if viewModel.profileImage != nil {
                     Divider()
-
+                    
                     Button("프로필 사진 삭제") {
                         Task { await viewModel.deletePhoto() }
                     }
@@ -159,8 +158,8 @@ struct ProfileView: View {
         }
         .padding(.horizontal)
     }
-
-
+    
+    
     private var cameraIcon: some View {
         Image(systemName: "camera.fill")
             .font(.system(size: 12))
@@ -168,7 +167,7 @@ struct ProfileView: View {
             .padding(6)
             .background(Circle().fill(Color.gray))
     }
-
+    
     private var cardBackground: some View {
         RoundedRectangle(cornerRadius: 20)
             .stroke(Color.gray.opacity(0.3), lineWidth: 0.5)
@@ -177,7 +176,7 @@ struct ProfileView: View {
     
     private func formattedPhone(_ number: String) -> String {
         let digits = number.filter { $0.isNumber }
-
+        
         switch digits.count {
         case 0...3:
             return digits
@@ -190,8 +189,8 @@ struct ProfileView: View {
             return "\(first)-\(middle)-\(last)"
         }
     }
-
 }
+
 
 #Preview {
     ProfileView(
