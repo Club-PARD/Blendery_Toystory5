@@ -8,26 +8,57 @@ import UIKit
 
 struct Mainpage_View: View {
 
+    // 뷰 상태 변수
     @State private var showStoreModal: Bool = false
+
+    // 뷰 상태 변수
+    // 서버가 카테고리별 데이터를 내려주는 구조면 선택값이 서버 요청 조건이 될 수 있음
     @State private var selectedCategory: String = "즐겨찾기"
 
-    //  토스트 상태 변수
+    // 뷰 상태 변수
     @State private var toastMessage: String = ""
+
+    // 뷰 상태 변수
     @State private var toastIconName: String? = nil
+
+    // 뷰 상태 변수
     @State private var showToast: Bool = false
 
+    // 상태 오브젝트
+    // 메인 화면 데이터 소스 역할
+    // 서버 연결 핵심 후보
+    // 메뉴 목록 조회, 즐겨찾기 토글 저장, 로딩 상태 등이 여기로
     @StateObject private var vm = MainpageViewModel()
+
+    // 상태 오브젝트
+    // 검색 입력과 포커스 상태 담당
+    // 서버 검색을 붙이면 여기의 text가 서버 요청 조건이 될 수 있음
     @StateObject private var searchVM = SearchBarViewModel()
 
-    // categories를 프로퍼티 초기화에서 쓰는 게 불안정하면 init으로 박아주는 게 제일 안전
+    // 상태 오브젝트
+    // 상단 카테고리 메뉴 데이터 소스
+    // 보통은 로컬 상수지만 서버에서 카테고리를 내려주는 구조면 서버 데이터가 될 수도 있음
     @StateObject private var topMenuVM: TopMenuViewModel
     init() {
+        // 화면 구성용 초기화
+        // 서버와 무관
         _topMenuVM = StateObject(wrappedValue: TopMenuViewModel(categories: categories))
     }
 
+    // 뷰 포커스 상태
+    // 키보드 포커스 관리
+    // 서버와 무관
     @FocusState private var isSearchFieldFocused: Bool
 
+    // 뷰 네비게이션 상태
+    // 상세 화면으로 넘길 선택 메뉴
+    // 서버 데이터일 가능성 높음
+    // 선택된 MenuCardModel 자체는 서버에서 내려받은 모델일 가능성이 큼
     @State private var selectedMenu: MenuCardModel? = nil
+
+    // 뷰 네비게이션 상태
+    // 프로필 화면 이동 여부
+    // 서버와 무관
     @State private var showProfile = false
 
     var body: some View {
@@ -38,35 +69,94 @@ struct Mainpage_View: View {
             VStack(spacing: 0) {
 
                 Mainpage_TopMenu(
+                    // 뷰 이벤트 처리
+                    // 서버와 무관
+                    // 다만 매장 선택을 서버로 저장하거나 불러오면 서버 요청으로 확장 가능
                     onTapStoreButton: {
                         withAnimation(.easeInOut(duration: 0.25)) { showStoreModal = true }
                     },
+
+                    // 뷰 이벤트 처리
+                    // 서버와 무관
                     onTapProfileButton: {
                         showProfile = true
                     },
+
+                    // 뷰 상태 바인딩
+                    // 선택된 카테고리 값 전달
+                    // 서버와 직접 무관
+                    // 카테고리별 서버 조회 구조라면 서버 요청 조건 역할
                     selectedCategory: $selectedCategory,
+
+                    // 화면 구성용 데이터 소스
+                    // 서버와 직접 무관
                     vm: topMenuVM
                 )
                 .background(Color.white)
 
                 Mainpage_ScrollView(
+                    // 뷰 상태 전달
+                    // 서버와 직접 무관
+                    // 카테고리별 서버 조회 구조라면 서버 요청 조건 역할
                     selectedCategory: selectedCategory,
+
+                    // 서버 연결 핵심 후보
+                    // 내부에서 메뉴 목록 제공, 즐겨찾기 토글 같은 서버 연동 작업이 들어갈 가능성 큼
                     vm: vm,
+
+                    // 뷰 이벤트 전달
+                    // 메뉴 선택 시 상세 이동을 위해 상태 갱신
+                    // 서버와 무관
                     onSelectMenu: { selectedMenu = $0 }
                 )
+
+                // 뷰 리프레시 트리거
+                // 카테고리 바뀔 때 스크롤 뷰 상태 초기화 목적
+                // 서버와 무관
                 .id(selectedCategory)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
+            // 검색 오버레이 표시 조건
+            // 뷰 상태 기반
+            // 서버와 무관
             if searchVM.isFocused {
-                searchOverlay
-                    .transition(.opacity)
-                    .zIndex(50)
+
+                Mainpage_SearchOverlayView(
+                    // 검색 상태 오브젝트
+                    // 서버와 직접 무관
+                    searchVM: searchVM,
+
+                    // 서버 데이터일 가능성 높음
+                    // 전체 메뉴 목록
+                    // 서버에서 내려받아 vm.cards로 가지고 있을 가능성 큼
+                    allMenus: vm.cards,
+
+                    // 서버 호출로 이어질 가능성 높음
+                    // 즐겨찾기 저장을 서버로 하려면 vm.toggleBookmark 내부에서 처리
+                    onToggleBookmark: { vm.toggleBookmark(id: $0) },
+
+                    // 뷰 네비게이션 이벤트
+                    // 선택 메뉴 설정 후 상세 이동
+                    onSelectMenu: { selectedMenu = $0 },
+
+                    // 키보드 포커스 바인딩
+                    // 서버와 무관
+                    focus: $isSearchFieldFocused
+                )
+                .transition(.opacity)
+                .zIndex(50)
             }
 
+            // 스토어 선택 모달 표시 조건
+            // 뷰 상태 기반
+            // 서버와 무관
             if showStoreModal {
                 Color.black.opacity(0.25)
                     .ignoresSafeArea()
+
+                    // 뷰 이벤트 처리
+                    // 서버와 무관
                     .onTapGesture {
                         withAnimation(.easeInOut(duration: 0.2)) { showStoreModal = false }
                     }
@@ -74,10 +164,16 @@ struct Mainpage_View: View {
 
                 GeometryReader { geo in
                     VStack(spacing: 0) {
+
+                        // UI 안전영역 처리
+                        // 서버와 무관
                         Color.white
                             .frame(height: geo.safeAreaInsets.top)
 
                         StoreSelectPanel(
+                            // 뷰 이벤트 처리
+                            // 서버와 무관
+                            // 매장 선택 값을 서버에 저장하는 구조라면 여기서 서버 호출로 확장 가능
                             onClose: {
                                 withAnimation(.easeInOut(duration: 0.2)) { showStoreModal = false }
                             }
@@ -85,6 +181,9 @@ struct Mainpage_View: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .top)
                     .background(Color.white)
+
+                    // UI 모서리 처리
+                    // 서버와 무관
                     .clipShape(RoundedCorner(radius: 16, corners: [.bottomLeft, .bottomRight]))
                     .transition(.move(edge: .top))
                     .ignoresSafeArea(edges: .top)
@@ -94,10 +193,16 @@ struct Mainpage_View: View {
         }
         .navigationBarBackButtonHidden(true)
 
+        // 네비게이션 처리
+        // 서버와 무관
+        // 다만 상세 화면에서 서버로 상세 데이터를 다시 조회할 수도 있음
         .navigationDestination(item: $selectedMenu) { menu in
             DetailRecipeView(menu: menu, allMenus: vm.cards)
         }
 
+        // 네비게이션 처리
+        // 현재는 하드코딩 데이터
+        // 서버 연동 시 UserProfile이 서버 데이터가 될 수 있음
         .navigationDestination(isPresented: $showProfile) {
             ProfileView(
                 profile: UserProfile(
@@ -110,26 +215,17 @@ struct Mainpage_View: View {
             )
         }
 
-        //  토스트 이벤트 처리
+        // 뷰 상태 업데이트
+        // vm.toast 값 변화를 받아 토스트 표시
+        // vm.toast가 서버 응답에 의해 세팅될 수는 있음
         .onChange(of: vm.toast) { newToast in
             guard let newToast else { return }
             presentToast(newToast)
             vm.clearToast()
         }
 
-        //  FocusState 동기화
-        .onChange(of: searchVM.isFocused) { newValue in
-            if isSearchFieldFocused != newValue {
-                isSearchFieldFocused = newValue
-            }
-        }
-        .onChange(of: isSearchFieldFocused) { newValue in
-            if searchVM.isFocused != newValue {
-                searchVM.isFocused = newValue
-            }
-        }
-
-        // 토스트 메시지 호출
+        // UI 오버레이
+        // 서버와 무관
         .overlay(alignment: .bottom) {
             if showToast {
                 Toastmessage_View(message: toastMessage, iconName: toastIconName)
@@ -139,23 +235,43 @@ struct Mainpage_View: View {
             }
         }
 
+        // 하단 검색바 영역 배치
+        // 서버와 무관
+        // 검색 서버 연동 시 searchVM.text가 서버 요청 조건이 됨
         .safeAreaInset(edge: .bottom, spacing: 0) {
             GeometryReader { geo in
                 VStack(spacing: 0) {
+
                     SearchBarView(
+                        // 검색 상태 오브젝트
+                        // 서버와 직접 무관
                         vm: searchVM,
+
+                        // UI 문자열
+                        // 서버와 무관
                         placeholder: "검색",
+
+                        // 현재는 출력만
+                        // 서버 검색 연동 시 여기서 서버 검색 트리거로 바뀔 수 있음
                         onSearchTap: { print("검색:", searchVM.text) },
+
+                        // 키보드 포커스 바인딩
+                        // 서버와 무관
                         focus: $isSearchFieldFocused
                     )
                     .padding(.horizontal, 16)
                     .padding(.top, 10)
                     .padding(.bottom, 12)
 
+                    // 안전영역 하단 패딩 처리
+                    // 서버와 무관
                     Color.clear
                         .frame(height: geo.safeAreaInsets.bottom)
                 }
                 .frame(maxWidth: .infinity)
+
+                // UI 배경 처리
+                // 서버와 무관
                 .background(Color.white.opacity(0.95))
                 .clipShape(RoundedCorner(radius: 30, corners: [.topLeft, .topRight]))
                 .overlay(
@@ -168,75 +284,23 @@ struct Mainpage_View: View {
     }
 }
 
-// MARK: - 검색 오버레이
+// 토스트 표시 함수
+// UI 상태 변경 로직
+// 서버와 무관
 private extension Mainpage_View {
-    var searchOverlay: some View {
-        let items = searchedItems
-        let q = searchVM.text.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        return ZStack(alignment: .top) {
-            Color.white
-                .ignoresSafeArea()
-                .onTapGesture { closeSearch() }
-
-            if !q.isEmpty && items.isEmpty {
-                VStack {
-                    Spacer()
-                    SearchEmpty_View()
-                        .padding(.bottom, -125)
-                    Spacer()
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 74) }
-
-            } else {
-                ScrollView {
-                    LazyVStack(spacing: 0) {
-                        ForEach(items) { item in
-                            MenuListRow(
-                                model: item,
-                                onToggleBookmark: { vm.toggleBookmark(id: item.id) },
-                                onSelect: { selectedMenu = item }
-                            )
-                        }
-                    }
-                    .padding(.bottom, 74)
-                }
-                .contentShape(Rectangle())
-                .onTapGesture { }
-            }
-        }
-    }
-
-    var searchedItems: [MenuCardModel] {
-        let q = searchVM.text.trimmingCharacters(in: .whitespacesAndNewlines)
-        if q.isEmpty { return vm.cards }
-        return vm.cards.filter {
-            $0.title.localizedCaseInsensitiveContains(q) ||
-            $0.subtitle.localizedCaseInsensitiveContains(q) ||
-            $0.lines.joined(separator: " ").localizedCaseInsensitiveContains(q)
-        }
-    }
-
-    func closeSearch() {
-        searchVM.close()
-        isSearchFieldFocused = false
-        hideKeyboard()
-    }
-
-    func hideKeyboard() {
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
-                                        to: nil, from: nil, for: nil)
-    }
-
-    //  토스트 표시 트리거(상태만 바꿈)
     func presentToast(_ data: ToastData) {
+
+        // UI 상태값 세팅
+        // 서버와 무관
         toastMessage = data.message
         toastIconName = data.iconName
 
         withAnimation(.easeOut(duration: 0.2)) {
             showToast = true
         }
+
+        // UI 타이머로 자동 종료
+        // 서버와 무관
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
             withAnimation(.easeIn(duration: 0.2)) {
                 showToast = false
@@ -245,7 +309,8 @@ private extension Mainpage_View {
     }
 }
 
-// 모달, 검색창 모서리 처리
+// UI 모서리 Shape
+// 서버와 무관
 private struct RoundedCorner: Shape {
     var radius: CGFloat
     var corners: UIRectCorner
@@ -256,8 +321,4 @@ private struct RoundedCorner: Shape {
             cornerRadii: CGSize(width: radius, height: radius)
         ).cgPath)
     }
-}
-
-#Preview("Mainpage_View") {
-    NavigationStack { Mainpage_View() }
 }

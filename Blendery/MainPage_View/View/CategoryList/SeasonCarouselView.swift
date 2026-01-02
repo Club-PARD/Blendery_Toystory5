@@ -2,42 +2,53 @@
 //  SeasonCarouselView.swift
 //  Blendery
 //
-//  ✅ 방법 1: 5배 복제 + 가운데(copy=2)로 유지해서 "무한 스크롤"이 자연스럽게 느껴지게
-//  ✅ 탭하면 onSelectMenu로 상세로 이동 가능
+//  시즌 메뉴 캐러셀
 //
 
 import SwiftUI
 import UIKit
 
 struct SeasonCarouselView: View {
+
+    // 서버 데이터
+    // 시즌 메뉴 목록
     let items: [MenuCardModel]
+
+    // 화면 이동용 이벤트
     var onSelectMenu: (MenuCardModel) -> Void = { _ in }
+
+    // 서버 호출
+    // 즐겨찾기 토글 같은 상태 변경 트리거
     var onToggleBookmark: (UUID) -> Void = { _ in }
 
+    // UI 레이아웃 상수
     private let cardWidth: CGFloat = 275
     private let cardHeight: CGFloat = 370
     private let spacing: CGFloat = 16
     private let topOffset: CGFloat = 80
-    private let extraCenterScale: CGFloat = 0.06   // 너가 가운데에 더하는 값
+    private let extraCenterScale: CGFloat = 0.06
     private var maxScale: CGFloat { 1.0 + extraCenterScale }
 
-    // ✅ 5배 복제 (0,1,2,3,4) / 가운데는 copy=2
+    // UI 무한 스크롤 느낌을 위한 복제 데이터
     private var loopItems: [LoopItem] {
         guard !items.isEmpty else { return [] }
         return (0..<5).flatMap { copy in
             items.map { LoopItem(copy: copy, item: $0) }
         }
     }
-    
+
+    // UI 상태 판정
     private func isCentered(_ loopID: String) -> Bool {
-        // 현재 스크롤이 맞춰진 카드(focusedID)와 탭한 카드(loopID)가 같으면 "가운데 카드"
         return focusedID == loopID
     }
 
-    @State private var focusedID: String?       // "copy-uuid"
+    // 캐러셀 중앙 카드 추적 상태
+    @State private var focusedID: String?
+
+    // 점프 중복 방지 상태
     @State private var isJumping = false
 
-    // ✅ 인디케이터용 현재 인덱스
+    // 인디케이터 표시용 계산값
     private var currentIndex: Int {
         guard let focusedID,
               let parsed = LoopItem.parse(id: focusedID) else { return 0 }
@@ -48,11 +59,13 @@ struct SeasonCarouselView: View {
         VStack(spacing: 0) {
             GeometryReader { outer in
                 let sideMargin = max((outer.size.width - cardWidth) / 2, 0)
-     
+
                 ScrollView(.horizontal, showsIndicators: false) {
                     LazyHStack(spacing: spacing) {
                         ForEach(loopItems) { loop in
                             GeometryReader { geo in
+
+                                // UI 스케일 계산
                                 let baseScale = scaleForCard(geo: geo, outer: outer)
                                 let isCenter = (focusedID == loop.id)
                                 let xScale = baseScale * (isCenter ? 1.1 : 1.00)
@@ -60,6 +73,8 @@ struct SeasonCarouselView: View {
 
                                 SeasonCard(
                                     item: loop.item,
+
+                                    // 서버 호출 즐찾
                                     onToggleBookmark: { onToggleBookmark(loop.item.id) }
                                 )
                                 .frame(width: cardWidth, height: cardHeight)
@@ -67,12 +82,15 @@ struct SeasonCarouselView: View {
                                 .animation(.easeOut(duration: 0.18), value: focusedID)
                                 .contentShape(Rectangle())
                                 .onTapGesture {
+
+                                    // UI 상호작용
                                     let wasCentered = (focusedID == loop.id)
 
                                     withAnimation(.easeInOut(duration: 0.25)) {
                                         focusedID = loop.id
                                     }
 
+                                    // 화면 이동용 이벤트
                                     if wasCentered {
                                         onSelectMenu(loop.item)
                                     }
@@ -90,6 +108,8 @@ struct SeasonCarouselView: View {
                 .scrollTargetBehavior(.viewAligned(limitBehavior: .always))
                 .scrollPosition(id: $focusedID, anchor: .center)
                 .onChange(of: focusedID) { newValue in
+
+                    // UI 무한 스크롤 점프 트리거
                     guard let newValue,
                           let parsed = LoopItem.parse(id: newValue) else { return }
                     if parsed.copy == 1 || parsed.copy == 3 {
@@ -103,6 +123,8 @@ struct SeasonCarouselView: View {
                 .padding(.bottom, 14)
         }
         .background(Color.clear)
+
+        // UI 초기 위치 세팅
         .onAppear {
             if focusedID == nil, let first = items.first {
                 let startID = LoopItem.makeID(copy: 2, originalID: first.id)
@@ -114,14 +136,13 @@ struct SeasonCarouselView: View {
         }
     }
 
-    // MARK: - Jump (중앙 copy=2로 복귀)
+    // 무한 스크롤처럼 보이게 중앙 복귀
     private func jumpToCenter(originalID: UUID) {
         guard !isJumping else { return }
         isJumping = true
 
         let jumpID = LoopItem.makeID(copy: 2, originalID: originalID)
 
-        // ✅ 스냅 애니메이션이 끝난 직후에 "무애니메이션 점프"
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
             var t = Transaction()
             t.animation = nil
@@ -134,7 +155,7 @@ struct SeasonCarouselView: View {
         }
     }
 
-    // MARK: - Scale
+    // 중앙 확대 계산
     private func scaleForCard(geo: GeometryProxy, outer: GeometryProxy) -> CGFloat {
         let centerX = outer.size.width / 2
         let cardMidX = geo.frame(in: .scrollView(axis: .horizontal)).midX
@@ -146,7 +167,7 @@ struct SeasonCarouselView: View {
         return 1.0 - (progress * 0.12)
     }
 
-    // MARK: - Indicator
+    // 인디케이터 UI
     private var indicatorView: some View {
         HStack(spacing: 8) {
             ForEach(items.indices, id: \.self) { idx in
@@ -159,7 +180,7 @@ struct SeasonCarouselView: View {
     }
 }
 
-// MARK: - LoopItem (원형 캐러셀용 래퍼)
+// UI 복제용 래퍼 모델
 private struct LoopItem: Identifiable {
     let copy: Int
     let item: MenuCardModel
@@ -177,16 +198,20 @@ private struct LoopItem: Identifiable {
     }
 }
 
-// MARK: - Card UI
+// 카드 UI
 private struct SeasonCard: View {
+
+    // 서버 데이터
     let item: MenuCardModel
+
+    // 서버 호출 즐찾
     let onToggleBookmark: () -> Void
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
 
             VStack(spacing: 0) {
-                
+
                 imageView
                     .frame(height: 260)
                     .frame(maxWidth: .infinity)
@@ -240,7 +265,10 @@ private struct SeasonCard: View {
     }
 
     private var imageView: some View {
+
+        // UI 이미지 선택 로직
         let name = item.title
+
         if UIImage(named: name) != nil {
             return AnyView(
                 Image(name)
@@ -259,47 +287,4 @@ private struct SeasonCard: View {
             )
         }
     }
-}
-
-#Preview("SeasonCarouselView - 시즌메뉴") {
-    let demoItems: [MenuCardModel] = [
-        MenuCardModel(
-            category: "시즌메뉴",
-            tags: ["NEW"],
-            title: "아메리카노",
-            subtitle: "논커피 | ICED Only",
-            lines: ["진한 원두", "깔끔한 맛"],
-            isBookmarked: true
-        ),
-        MenuCardModel(
-            category: "시즌메뉴",
-            tags: ["NEW"],
-            title: "라떼",
-            subtitle: "Milk | HOT/ICED",
-            lines: ["부드러운 우유", "고소한 맛"],
-            isBookmarked: false
-        ),
-        MenuCardModel(
-            category: "시즌메뉴",
-            tags: ["NEW"],
-            title: "바닐라라떼",
-            subtitle: "Sweet | ICED Only",
-            lines: ["바닐라 향", "달콤한 맛"],
-            isBookmarked: true
-        ),
-        MenuCardModel(
-            category: "시즌메뉴",
-            tags: ["NEW"],
-            title: "콜드브루",
-            subtitle: "Cold Brew | ICED",
-            lines: ["산미 적음", "진한 향"],
-            isBookmarked: false
-        )
-    ]
-
-    return SeasonCarouselView(items: demoItems) { selected in
-        print("✅ 선택:", selected.title)
-    }
-    .padding(.top, 10)
-    .background(Color(red: 0.97, green: 0.97, blue: 0.97))
 }
