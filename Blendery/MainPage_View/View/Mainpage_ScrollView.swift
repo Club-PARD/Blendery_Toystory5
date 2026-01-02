@@ -93,7 +93,11 @@ private extension Mainpage_ScrollView {
         let items = vm.normalItems(for: selectedCategory)
 
         if selectedCategory == "시즌메뉴" {
-            SeasonCarouselView(items: items, onSelectMenu: onSelectMenu)
+            SeasonCarouselView(
+                items: items,
+                onSelectMenu: onSelectMenu,
+                onToggleBookmark: { vm.toggleBookmark(id: $0) }
+            )
         } else {
             ScrollView {
                 LazyVStack(spacing: 0) {

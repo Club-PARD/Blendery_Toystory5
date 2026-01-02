@@ -12,11 +12,14 @@ import UIKit
 struct SeasonCarouselView: View {
     let items: [MenuCardModel]
     var onSelectMenu: (MenuCardModel) -> Void = { _ in }
+    var onToggleBookmark: (UUID) -> Void = { _ in }
 
-    private let cardWidth: CGFloat = 248
-    private let cardHeight: CGFloat = 340
+    private let cardWidth: CGFloat = 275
+    private let cardHeight: CGFloat = 370
     private let spacing: CGFloat = 16
-    private let topOffset: CGFloat = 100
+    private let topOffset: CGFloat = 80
+    private let extraCenterScale: CGFloat = 0.06   // 너가 가운데에 더하는 값
+    private var maxScale: CGFloat { 1.0 + extraCenterScale }
 
     // ✅ 5배 복제 (0,1,2,3,4) / 가운데는 copy=2
     private var loopItems: [LoopItem] {
@@ -24,6 +27,11 @@ struct SeasonCarouselView: View {
         return (0..<5).flatMap { copy in
             items.map { LoopItem(copy: copy, item: $0) }
         }
+    }
+    
+    private func isCentered(_ loopID: String) -> Bool {
+        // 현재 스크롤이 맞춰진 카드(focusedID)와 탭한 카드(loopID)가 같으면 "가운데 카드"
+        return focusedID == loopID
     }
 
     @State private var focusedID: String?       // "copy-uuid"
@@ -45,19 +53,30 @@ struct SeasonCarouselView: View {
                     LazyHStack(spacing: spacing) {
                         ForEach(loopItems) { loop in
                             GeometryReader { geo in
-                                let scale = scaleForCard(geo: geo, outer: outer)
+                                let baseScale = scaleForCard(geo: geo, outer: outer)
+                                let isCenter = (focusedID == loop.id)
+                                let xScale = baseScale * (isCenter ? 1.1 : 1.00)   // 가로 3%만
+                                let yScale = baseScale * (isCenter ? 1.15 : 1.00)
 
-                                SeasonCard(item: loop.item)
-                                    .frame(width: cardWidth, height: cardHeight)
-                                    .scaleEffect(scale)
-                                    .animation(.easeOut(duration: 0.18), value: scale)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        withAnimation(.easeInOut(duration: 0.25)) {
-                                            focusedID = loop.id
-                                        }
+                                SeasonCard(
+                                    item: loop.item,
+                                    onToggleBookmark: { onToggleBookmark(loop.item.id) }
+                                )
+                                .frame(width: cardWidth, height: cardHeight)
+                                .scaleEffect(x: xScale, y: yScale)
+                                .animation(.easeOut(duration: 0.18), value: focusedID)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    let wasCentered = (focusedID == loop.id)
+
+                                    withAnimation(.easeInOut(duration: 0.25)) {
+                                        focusedID = loop.id
+                                    }
+
+                                    if wasCentered {
                                         onSelectMenu(loop.item)
                                     }
+                                }
                             }
                             .frame(width: cardWidth, height: cardHeight)
                             .id(loop.id)
@@ -65,7 +84,7 @@ struct SeasonCarouselView: View {
                     }
                     .scrollTargetLayout()
                     .padding(.top, topOffset)
-                    .padding(.bottom, 0) // ✅ 6 없애기
+                    .padding(.bottom, (cardHeight * extraCenterScale / 2) + 10) // ✅ 6 없애기
                 }
                 .contentMargins(.horizontal, sideMargin, for: .scrollContent)
                 .scrollTargetBehavior(.viewAligned(limitBehavior: .always))
@@ -78,11 +97,11 @@ struct SeasonCarouselView: View {
                     }
                 }
             }
-            .frame(height: cardHeight + topOffset) // ✅ +6 제거
+            .frame(height: cardHeight * maxScale + topOffset + 16) // ✅ +6 제거
 
             indicatorView
-                .padding(.top, 8)      // ✅ 카드랑 간격
-                .padding(.bottom, 6)
+                
+                .padding(.bottom, 14)
         }
         .background(Color.clear)       // ✅ 여기서 배경을 한 덩어리로 통일(필요시 Color.white로)
         .onAppear {
@@ -134,10 +153,10 @@ struct SeasonCarouselView: View {
             ForEach(items.indices, id: \.self) { idx in
                 Circle()
                     .fill(idx == currentIndex ? Color(red: 0.11, green: 0.25, blue: 0.55) : Color.gray.opacity(0.35))
-                    .frame(width: 7, height: 7)
+                    .frame(width: 9, height: 9)
             }
         }
-        .padding(.bottom, 6)
+        .padding(.vertical, 20)
     }
 }
 
@@ -159,62 +178,69 @@ private struct LoopItem: Identifiable {
     }
 }
 
+
+
 // MARK: - Card UI
 private struct SeasonCard: View {
     let item: MenuCardModel
+    let onToggleBookmark: () -> Void
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            // 카드 전체를 한 번에 클립 → 경계선/띠 생길 확률 최소화
-            VStack(spacing: 0) {
 
-                // ✅ 이미지 영역 (상단)
+            VStack(spacing: 0) {
+                
                 imageView
                     .frame(height: 260)
                     .frame(maxWidth: .infinity)
-                    .background(Color.white) // 혹시 이미지 투명일 때 대비
                     .clipped()
+                    .padding(.top, 20)
 
-                // ✅ 하단 파란 영역 (딱 붙음)
                 HStack(alignment: .center, spacing: 12) {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(item.title)
                             .font(.system(size: 18, weight: .bold))
-                            .foregroundColor(.white)
+                            .foregroundColor(.black)
                             .lineLimit(1)
 
                         Text(item.subtitle)
                             .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(.white.opacity(0.9))
+                            .foregroundColor(Color(red: 0.53, green: 0.53, blue: 0.53))
                             .lineLimit(1)
                     }
 
                     Spacer()
 
-                    Image(systemName: "bookmark.fill")
-                        .foregroundColor(.orange)
-                        .padding(.trailing, 2)
+                    Button(action: onToggleBookmark) {
+                        Image(item.isBookmarked ? "즐찾아이콘" : "즐찾끔")
+                            .resizable()
+                            .frame(width: 14, height: 17)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .padding(.horizontal, 18)
+                .padding(.horizontal, 24)
                 .padding(.vertical, 16)
                 .frame(maxWidth: .infinity)
-                .background(Color(red: 0.11, green: 0.25, blue: 0.55))
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .background(Color.white) // ✅ 배경을 카드 본체에
             .clipShape(RoundedRectangle(cornerRadius: 18))
-            .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 6)
+            .overlay(
+                RoundedRectangle(cornerRadius: 18)
+                    .stroke(Color.gray.opacity(0.25), lineWidth: 1)
+            )// ✅ 카드 본체를 실제로 자름
 
-            // ✅ NEW 뱃지
             Text("NEW")
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundColor(Color(red: 0.11, green: 0.25, blue: 0.55))
+                .foregroundColor(.white)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
-                .background(Color.white.opacity(0.95))
+                .background(Color(red: 0.14, green: 0.24, blue: 0.51))
                 .clipShape(RoundedRectangle(cornerRadius: 6))
-                .padding(12)
+                .padding(.top, 28)
+                .padding(.trailing, 24)   // 오른쪽
         }
     }
-
     private var imageView: some View {
         let name = item.title
         if UIImage(named: name) != nil {
@@ -236,4 +262,48 @@ private struct SeasonCard: View {
             )
         }
     }
+}
+
+#Preview("SeasonCarouselView - 시즌메뉴") {
+    // ✅ 프리뷰용 더미 데이터 (네 MenuCardModel init 시그니처에 맞춰서)
+    let demoItems: [MenuCardModel] = [
+        MenuCardModel(
+            category: "시즌메뉴",
+            tags: ["NEW"],
+            title: "아메리카노",      // ✅ 에셋에 이미지 없으면 loading으로 뜸
+            subtitle: "논커피 | ICED Only",
+            lines: ["진한 원두", "깔끔한 맛"],
+            isBookmarked: true
+        ),
+        MenuCardModel(
+            category: "시즌메뉴",
+            tags: ["NEW"],
+            title: "라떼",
+            subtitle: "Milk | HOT/ICED",
+            lines: ["부드러운 우유", "고소한 맛"],
+            isBookmarked: false
+        ),
+        MenuCardModel(
+            category: "시즌메뉴",
+            tags: ["NEW"],
+            title: "바닐라라떼",
+            subtitle: "Sweet | ICED Only",
+            lines: ["바닐라 향", "달콤한 맛"],
+            isBookmarked: true
+        ),
+        MenuCardModel(
+            category: "시즌메뉴",
+            tags: ["NEW"],
+            title: "콜드브루",
+            subtitle: "Cold Brew | ICED",
+            lines: ["산미 적음", "진한 향"],
+            isBookmarked: false
+        )
+    ]
+
+    return SeasonCarouselView(items: demoItems) { selected in
+        print("✅ 선택:", selected.title)
+    }
+    .padding(.top, 10)
+    .background(Color(red: 0.97, green: 0.97, blue: 0.97))
 }
