@@ -47,3 +47,45 @@ enum RecipeVariantType: String, Codable, Hashable {
         try container.encode(self == .OTHER ? "OTHER" : self.rawValue)
     }
 }
+
+extension MenuCardModel {
+
+    static func from(_ recipe: RecipeModel) -> MenuCardModel {
+
+        let defaultVariant = recipe.variants.first { $0.isDefault }
+            ?? recipe.variants.first
+
+        return MenuCardModel(
+            id: recipe.id,
+            category: recipe.category,
+            tags: [],
+            title: recipe.title,
+            subtitle: subtitle(from: defaultVariant),
+            lines: defaultVariant?.steps ?? [],
+            isBookmarked: false,
+            isImageLoading: false,
+            imageName: nil
+        )
+    }
+
+    // MARK: - Helpers
+
+    private static func tags(from variant: RecipeVariantModel?) -> [String] {
+        guard let variant else { return [] }
+
+        switch variant.type {
+        case .ICE_LARGE: return ["ICE", "L"]
+        case .ICE_SMALL: return ["ICE"]
+        case .HOT_LARGE: return ["HOT", "L"]
+        case .HOT_SMALL: return ["HOT"]
+        case .OTHER: return []
+        }
+    }
+
+    private static func subtitle(from variant: RecipeVariantModel?) -> String {
+        // 임시 규칙 (나중에 서버 필드 생기면 교체)
+        guard let variant else { return "" }
+        return "\(variant.steps.first ?? "")"
+    }
+}
+

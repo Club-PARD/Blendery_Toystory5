@@ -12,8 +12,8 @@ final class BlenderyAPI {
 
     //  baseURL은 "루트"만 (끝에 / 붙여도 되고 안 붙여도 됨)
     let baseURL: URL = {
-        guard let url = URL(string: BaseURL.value) else {
-            fatalError("❌ Invalid BaseURL: \(BaseURL.value)")
+        guard let url = URL(string: BaseURL.baseUrl.rawValue) else {
+            fatalError("❌ Invalid BaseURL: \(BaseURL.baseUrl.rawValue)")
         }
         return url
     }()

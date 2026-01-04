@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		B75215282F061AF7006711D6 /* BaseURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = B75215272F061AF1006711D6 /* BaseURL.swift */; };
 		B797858D2EFBBE3E00128229 /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = B797858C2EFBBE3E00128229 /* .gitignore */; };
+		B7F16C642F0A631B00683706 /* BaseURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7F16C632F0A631800683706 /* BaseURL.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -29,16 +29,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		B75215272F061AF1006711D6 /* BaseURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseURL.swift; sourceTree = "<group>"; };
 		B79785622EFBBD9B00128229 /* Blendery.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Blendery.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B797856F2EFBBD9D00128229 /* BlenderyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BlenderyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B79785792EFBBD9D00128229 /* BlenderyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BlenderyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B797858C2EFBBE3E00128229 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
-		BF55FE232F06285D00ECF9C6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = Blendery/Info.plist; sourceTree = "<group>"; };
+		B7F16C632F0A631800683706 /* BaseURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseURL.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		BF55FE272F0628D900ECF9C6 /* Exceptions for "Blendery" folder in "Blendery" target */ = {
+		B7F16C652F0A642C00683706 /* Exceptions for "Blendery" folder in "Blendery" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -51,7 +50,7 @@
 		B79785642EFBBD9B00128229 /* Blendery */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				BF55FE272F0628D900ECF9C6 /* Exceptions for "Blendery" folder in "Blendery" target */,
+				B7F16C652F0A642C00683706 /* Exceptions for "Blendery" folder in "Blendery" target */,
 			);
 			path = Blendery;
 			sourceTree = "<group>";
@@ -96,8 +95,7 @@
 		B79785592EFBBD9B00128229 = {
 			isa = PBXGroup;
 			children = (
-				BF55FE232F06285D00ECF9C6 /* Info.plist */,
-				B75215272F061AF1006711D6 /* BaseURL.swift */,
+				B7F16C632F0A631800683706 /* BaseURL.swift */,
 				B797858C2EFBBE3E00128229 /* .gitignore */,
 				B79785642EFBBD9B00128229 /* Blendery */,
 				B79785722EFBBD9D00128229 /* BlenderyTests */,
@@ -261,7 +259,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B75215282F061AF7006711D6 /* BaseURL.swift in Sources */,
+				B7F16C642F0A631B00683706 /* BaseURL.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -418,7 +416,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 7QLUX7UAM7;
+				DEVELOPMENT_TEAM = JLUU6A32Q2;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -462,7 +460,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 7QLUX7UAM7;
+				DEVELOPMENT_TEAM = JLUU6A32Q2;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;

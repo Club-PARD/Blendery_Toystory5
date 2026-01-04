@@ -12,10 +12,10 @@ final class UserService {
         let url = URL(string: "https://api.yourserver.com/user/me")!
         let token = "ACCESS_TOKEN" // 🔐 Keychain에서 가져오게 변경
 
-        APIClient.shared.request(
-            url: url,
-            token: token,
-            completion: completion
-        )
+//        APIClient.shared.request(
+//            url: url,
+//            token: token,
+//            completion: completion
+//        )
     }
 }

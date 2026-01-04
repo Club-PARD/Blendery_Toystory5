@@ -8,31 +8,69 @@
 import Foundation
 
 final class APIClient {
+
     static let shared = APIClient()
     private init() {}
 
-    func request<T: Decodable>(
-        url: URL,
-        token: String,
-        completion: @escaping (Result<T, Error>) -> Void
-    ) {
-        var request = URLRequest(url: url)
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    private let baseURL = BaseURL.baseUrl.rawValue
 
-        URLSession.shared.dataTask(with: request) { data, _, error in
-            if let error = error {
-                completion(.failure(error))
-                return
-            }
+    func fetchRecipeDetail(recipeId: UUID) async throws -> RecipeModel {
+        let url = URL(string: "\(baseURL)/api/recipe/\(recipeId.uuidString)")!
 
-            guard let data = data else { return }
+        let (data, response) = try await URLSession.shared.data(from: url)
 
-            do {
-                let decoded = try JSONDecoder().decode(T.self, from: data)
-                completion(.success(decoded))
-            } catch {
-                completion(.failure(error))
-            }
-        }.resume()
+        guard let http = response as? HTTPURLResponse,
+              (200...299).contains(http.statusCode)
+        else {
+            throw URLError(.badServerResponse)
+        }
+
+        return try JSONDecoder().decode(RecipeModel.self, from: data)
+    }
+    
+    func fetchRecipes(
+        franchiseId: String,
+        category: String? = nil,
+        favorite: Bool? = nil
+    ) async throws -> [RecipeModel] {
+
+        var components = URLComponents(string: "\(baseURL)/api/recipe/recipes")!
+        var queryItems: [URLQueryItem] = [
+            URLQueryItem(name: "franchiseId", value: franchiseId)
+        ]
+
+        if let category {
+            queryItems.append(
+                URLQueryItem(name: "category", value: category)
+            )
+        }
+
+        if let favorite {
+            queryItems.append(
+                URLQueryItem(name: "favorite", value: String(favorite))
+            )
+        }
+
+        components.queryItems = queryItems
+
+        guard let url = components.url else {
+            throw URLError(.badURL)
+        }
+
+        let (data, response) = try await URLSession.shared.data(from: url)
+        
+        if let http = response as? HTTPURLResponse {
+            print("📡 statusCode:", http.statusCode)
+        }
+
+        print("📦 raw response:", String(data: data, encoding: .utf8) ?? "nil")
+
+        guard let http = response as? HTTPURLResponse,
+              (200...299).contains(http.statusCode)
+        else {
+            throw URLError(.badServerResponse)
+        }
+
+        return try JSONDecoder().decode([RecipeModel].self, from: data)
     }
 }

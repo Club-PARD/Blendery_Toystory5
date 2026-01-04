@@ -67,6 +67,7 @@ struct Mainpage_View: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
+                Text("cards count: \(vm.cards.count)")
 
                 Mainpage_TopMenu(
                     // 뷰 이벤트 처리
@@ -114,8 +115,15 @@ struct Mainpage_View: View {
                 // 카테고리 바뀔 때 스크롤 뷰 상태 초기화 목적
                 // 서버와 무관
                 .id(selectedCategory)
+                .task {
+                    await vm.fetchRecipes(
+                        franchiseId: "ac120003-9b6e-19e0-819b-6e8a08870001",
+                        category: "COFFEE"
+                    )
+                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            
 
             // 검색 오버레이 표시 조건
             // 뷰 상태 기반
@@ -320,5 +328,17 @@ private struct RoundedCorner: Shape {
             byRoundingCorners: corners,
             cornerRadii: CGSize(width: radius, height: radius)
         ).cgPath)
+    }
+}
+
+extension ProcessInfo {
+    var isPreview: Bool {
+        environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
+    }
+}
+
+#Preview {
+    NavigationStack {
+        Mainpage_View()
     }
 }

@@ -10,21 +10,57 @@ struct ToastData: Identifiable, Equatable {
 
 @MainActor
 final class MainpageViewModel: ObservableObject {
+    
+    private let categoryMap: [String: String] = [
+        "커피": "COFFEE",
+        "논커피": "NON_COFFEE",
+        "에이드": "ADE",
+        "과일주스": "JUICE",
+        "시즌메뉴": "SEASON"
+    ]
 
-    @Published var cards: [MenuCardModel]
+    @Published var cards: [MenuCardModel] = []
     @Published var toast: ToastData? = nil
 
-    init(cards: [MenuCardModel] = menuCardsMock) {
-        self.cards = cards
+    init() {}
+
+    func fetchRecipes(
+        franchiseId: String,
+        category: String? = nil,
+        favorite: Bool? = nil
+    ) async {
+
+        do {
+            let recipes = try await APIClient.shared.fetchRecipes(
+                franchiseId: franchiseId,
+                category: category,
+                favorite: favorite
+            )
+
+            // 🔄 서버 모델 → UI 모델 변환
+            self.cards = recipes.map { recipe in
+                MenuCardModel.from(recipe)
+            }
+
+        } catch {
+            print("❌ 레시피 목록 조회 실패:", error)
+        }
     }
+
 
     var favoriteItems: [MenuCardModel] {
         cards.filter { $0.isBookmarked }
     }
 
     func normalItems(for selectedCategory: String) -> [MenuCardModel] {
-        cards.filter { $0.category == selectedCategory }
+
+        guard let serverCategory = categoryMap[selectedCategory] else {
+            return []
+        }
+
+        return cards.filter { $0.category == serverCategory }
     }
+
 
     func toggleBookmark(id: UUID) {
         guard let idx = cards.firstIndex(where: { $0.id == id }) else { return }
