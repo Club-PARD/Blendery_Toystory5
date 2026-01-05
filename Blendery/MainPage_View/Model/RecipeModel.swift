@@ -48,6 +48,47 @@ enum RecipeVariantType: String, Codable, Hashable {
     }
 }
 
+extension RecipeVariantType {
+
+    /// OptionBadge에 표시할 UI용 태그
+    var optionTags: [String] {
+        switch self {
+        case .HOT_LARGE:
+            return ["HOT", "L"]
+        case .HOT_EXTRA:
+            return ["HOT", "XL"]
+        case .ICE_LARGE:
+            return ["ICE", "L"]
+        case .ICE_EXTRA:
+            return ["ICE", "XL"]
+        case .OTHER:
+            return []
+        }
+    }
+}
+
+//아이스 메뉴 토글 조정 코드 추후 효율적으로 병합 가능할듯
+enum TempOption: Hashable { case hot, ice }
+enum SizeOption: Hashable { case large, extra }
+
+extension RecipeVariantType {
+    var tempOption: TempOption? {
+        switch self {
+        case .HOT_LARGE, .HOT_EXTRA: return .hot
+        case .ICE_LARGE, .ICE_EXTRA: return .ice
+        case .OTHER: return nil
+        }
+    }
+
+    var sizeOption: SizeOption? {
+        switch self {
+        case .HOT_LARGE, .ICE_LARGE: return .large
+        case .HOT_EXTRA, .ICE_EXTRA: return .extra
+        case .OTHER: return nil
+        }
+    }
+}
+
 extension MenuCardModel {
     
     // ✅ 메인 목록용 (RecipeModel → MenuCardModel)
@@ -102,6 +143,26 @@ extension MenuCardModel {
         if model.signature { tags.append("SIGNATURE") }
         if model.new { tags.append("NEW") }
         return tags
+    }
+}
+
+
+// 아이스 메뉴 토글 조정 코드 추후 효율적으로 extension끼리 병합 가능할듯
+extension MenuCardModel {
+    var availableTemps: Set<TempOption> {
+        let keys = recipesByOption.keys
+        var result = Set<TempOption>()
+        if keys.contains("HOT_LARGE") || keys.contains("HOT_EXTRA") { result.insert(.hot) }
+        if keys.contains("ICE_LARGE") || keys.contains("ICE_EXTRA") { result.insert(.ice) }
+        return result
+    }
+
+    var availableSizes: Set<SizeOption> {
+        let keys = recipesByOption.keys
+        var result = Set<SizeOption>()
+        if keys.contains("HOT_LARGE") || keys.contains("ICE_LARGE") { result.insert(.large) }
+        if keys.contains("HOT_EXTRA") || keys.contains("ICE_EXTRA") { result.insert(.extra) }
+        return result
     }
 }
 

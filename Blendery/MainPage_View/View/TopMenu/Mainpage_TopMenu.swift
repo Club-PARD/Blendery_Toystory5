@@ -13,6 +13,10 @@ struct Mainpage_TopMenu: View {
     @Binding var selectedCategory: String
     @ObservedObject var vm: TopMenuViewModel
 
+    //  레이아웃 분기용
+    @Environment(\.horizontalSizeClass) private var hSizeClass
+    private var isPadLayout: Bool { hSizeClass == .regular }
+
     var body: some View {
         VStack(spacing: 12) {
 
@@ -48,38 +52,76 @@ struct Mainpage_TopMenu: View {
             }
             .padding(.horizontal, 26)
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 0) {
-                    ForEach(vm.categories, id: \.self) { category in
-                        let isSelected = (selectedCategory == category)
+            // ✅ 여기부터: iPad / iPhone 분기
+            Group {
+                if isPadLayout {
+                    // ✅ iPad: 전체 폭 균등 분배 (스크롤 없음)
+                    HStack(spacing: 0) {
+                        ForEach(vm.categories, id: \.self) { category in
+                            let isSelected = (selectedCategory == category)
 
-                        Button {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                selectedCategory = category
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    selectedCategory = category
+                                }
+                            } label: {
+                                Text(category)
+                                    .font(.system(size: 15, weight: isSelected ? .bold : .regular))
+                                    .lineLimit(1)
+                                    .frame(maxWidth: .infinity)   // ⭐️ 균등 분배 핵심
+                                    .frame(height: 33)
+                                    .foregroundColor(vm.textColor(for: category))
+                                    .background(
+                                        GeometryReader { geo in
+                                            Color.clear.preference(
+                                                key: CategoryFrameKey.self,
+                                                value: [category: geo.frame(in: .named("CategoryScroll"))]
+                                            )
+                                        }
+                                    )
                             }
-                        } label: {
-                            Text(category)
-                                .font(.system(size: 15, weight: isSelected ? .bold : .regular))
-                                .lineLimit(1)
-                                .fixedSize(horizontal: true, vertical: false)
-                                .padding(.horizontal, 14)
-                                .frame(height: 33)
-                                .foregroundColor(vm.textColor(for: category))
-                                .background(
-                                    GeometryReader { geo in
-                                        Color.clear.preference(
-                                            key: CategoryFrameKey.self,
-                                            value: [category: geo.frame(in: .named("CategoryScroll"))]
-                                        )
-                                    }
-                                )
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 8)
+                } else {
+                    // ✅ iPhone: 지금처럼 가로 스크롤 유지
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 0) {
+                            ForEach(vm.categories, id: \.self) { category in
+                                let isSelected = (selectedCategory == category)
+
+                                Button {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        selectedCategory = category
+                                    }
+                                } label: {
+                                    Text(category)
+                                        .font(.system(size: 15, weight: isSelected ? .bold : .regular))
+                                        .lineLimit(1)
+                                        .fixedSize(horizontal: true, vertical: false)
+                                        .padding(.horizontal, 14)
+                                        .frame(height: 33)
+                                        .foregroundColor(vm.textColor(for: category))
+                                        .background(
+                                            GeometryReader { geo in
+                                                Color.clear.preference(
+                                                    key: CategoryFrameKey.self,
+                                                    value: [category: geo.frame(in: .named("CategoryScroll"))]
+                                                )
+                                            }
+                                        )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 8)
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 8)
             }
+            // ✅ indicator(밑줄) 로직은 iPad/iPhone 공통 적용
             .coordinateSpace(name: "CategoryScroll")
             .onPreferenceChange(CategoryFrameKey.self) { frames in
                 vm.categoryFrames = frames

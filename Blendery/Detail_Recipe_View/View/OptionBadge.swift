@@ -42,7 +42,11 @@ private func verticalDivider() -> some View {
         .scaleEffect(x: 0.3, y: 1, anchor: .center)
 }
 
-//#Preview {
-//    OptionBadge()
-//}
+#Preview {
+    OptionBadge(
+        tags: ["ICE", "XL"]
+    )
+    .padding()
+    .previewLayout(.sizeThatFits)
+}
 

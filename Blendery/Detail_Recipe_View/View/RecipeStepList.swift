@@ -9,7 +9,8 @@ import SwiftUI
 
 struct RecipeStepList: View {
     let steps: [RecipeStep]
-
+    var bottomInset: CGFloat = 10
+    
     var body: some View {
         ScrollView {
             Text("레시피")
@@ -17,7 +18,7 @@ struct RecipeStepList: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .fontWeight(.regular)
                 .padding(.leading, 8)
-
+            
             VStack(spacing: 12) {
                 ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
                     RecipeStepCell(
@@ -26,6 +27,10 @@ struct RecipeStepList: View {
                     )
                 }
             }
+            
+        }
+        .safeAreaInset(edge: .bottom) {
+            Color.clear.frame(height: bottomInset)
         }
     }
 }

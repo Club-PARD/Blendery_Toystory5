@@ -13,6 +13,7 @@ struct LoginView: View {
             Login_ID_PW()
 
             Login_AutoLogin()
+                .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.vertical, 16)
 
             Login_Button()

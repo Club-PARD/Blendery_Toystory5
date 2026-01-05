@@ -32,21 +32,18 @@ struct DetailRecipeView: View {
         ZStack {
             // ✅ 기본 상세 화면
             VStack(spacing: 0) {
-                RecipeTitle(menu: menu)
+                RecipeTitle(
+                    menu: menu,
+                    optionTags: vm.optionBadgeTags
+                )
                     .padding(22)
                 
                 // ✅ (기본) 현재 메뉴의 레시피 step은 그대로
-                RecipeStepList(steps: vm.currentSteps)
-                    .padding(16)
+//                RecipeStepList(steps: vm.currentSteps)
+//                    .padding(16)
                 
-                HStack {
-                    Spacer()
-                    OptionButton(
-                        temperature: $vm.selectedTemperature,
-                        size: $vm.selectedSize
-                    )
-                    .padding(.trailing)
-                }
+                RecipeStepList(steps: vm.currentSteps, bottomInset: 200)
+                    .padding(16)
                 
                 Spacer(minLength: 0)
             }
@@ -58,8 +55,32 @@ struct DetailRecipeView: View {
                     .zIndex(50)
             }
         }
+        .overlay(alignment: .bottomTrailing) {
+            let showTemp = menu.availableTemps.count >= 2
+            let showSize = menu.availableSizes.count >= 2
+
+            OptionButton(
+                temperature: $vm.selectedTemperature,
+                size: $vm.selectedSize,
+                showTemperatureToggle: showTemp,
+                showSizeToggle: showSize
+            )
+            .padding(.trailing, 16)
+            .padding(.bottom, 15)
+        }
         .onAppear {
             vm.menu = menu
+
+            // 아이스 메뉴 토글 조정 코드
+            // ✅ 온도가 1종이면 그 값으로 강제 고정
+            if menu.availableTemps.count == 1 {
+                vm.selectedTemperature = menu.availableTemps.contains(.ice) ? .ice : .hot
+            }
+
+            // ✅ 사이즈가 1종이면 그 값으로 강제 고정
+            if menu.availableSizes.count == 1 {
+                vm.selectedSize = menu.availableSizes.contains(.extra) ? .extra : .large
+            }
         }
         // ✅ 하단 검색창 고정
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -175,5 +196,39 @@ private struct SearchResultRow: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+    }
+}
+
+
+#Preview {
+    let previewMenu = MenuCardModel(
+        id: UUID(),
+        category: "커피",
+        tags: [],
+        title: "카페모카",
+        subtitle: "에스프레소 2샷",
+        lines: [],   // 👈 currentSteps는 VM에서 사용
+        recipesByOption: [
+            "ICE_LARGE": [
+                RecipeStep(text: "얼음 컵에 우유"),
+                RecipeStep(text: "에스프레소 2샷"),
+                RecipeStep(text: "초코 시럽")
+            ],
+            "HOT_EXTRA": [
+                RecipeStep(text: "따뜻한 우유"),
+                RecipeStep(text: "에스프레소 3샷"),
+                RecipeStep(text: "초코 시럽")
+            ]
+        ],
+        isBookmarked: false,
+        isImageLoading: false,
+        imageName: nil
+    )
+
+    NavigationStack {
+        DetailRecipeView(
+            menu: previewMenu,
+            allMenus: [previewMenu]
+        )
     }
 }

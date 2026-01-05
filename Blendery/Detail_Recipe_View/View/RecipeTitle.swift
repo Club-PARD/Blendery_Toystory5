@@ -9,6 +9,7 @@ import SwiftUI
 
 struct RecipeTitle: View {
     let menu: MenuCardModel
+    let optionTags: [String]
 
     var body: some View {
         HStack {
@@ -24,14 +25,20 @@ struct RecipeTitle: View {
                         .scaledToFit()
                         .frame(width: 37.5, height: 55.63)
                 } else {
-                    Image(systemName: "cup.and.saucer.fill")
-                        .foregroundColor(.gray)
+                    Image("상세 로딩")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 70, height: 70)
+                        .clipShape(Circle())
                 }
             }
 
             VStack {
                 HStack {
-                    OptionBadge(tags: ["ICE"])
+                    OptionBadge(
+                        tags: optionTags
+                    )
+                    .padding(.bottom, 8)
                     Spacer()
                     FavoriteButton()
                 }
@@ -44,15 +51,15 @@ struct RecipeTitle: View {
     }
 }
 
-#Preview {
-    RecipeTitle(
-        menu: MenuCardModel(
-            category: "커피",
-            tags: ["ICE"], // ✅ 추가
-            title: "카페모카",
-            subtitle: "에스프레소 2샷",
-            lines: ["에스프레소 2샷", "초코소스 2펌프", "우유 윗선"],
-            isBookmarked: false
-        )
-    )
-}
+//#Preview {
+//    RecipeTitle(
+//        menu: MenuCardModel(
+//            category: "커피",
+//            tags: ["ICE"], // ✅ 추가
+//            title: "카페모카",
+//            subtitle: "에스프레소 2샷",
+//            lines: ["에스프레소 2샷", "초코소스 2펌프", "우유 윗선"],
+//            isBookmarked: false
+//        )
+//    )
+//}

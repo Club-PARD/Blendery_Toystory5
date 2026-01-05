@@ -65,6 +65,8 @@ struct Mainpage_View: View {
     // 프로필 화면 이동 여부
     // 서버와 무관
     @State private var showProfile = false
+    
+    @State private var showSearchSheet = false
 
     var body: some View {
         ZStack {
@@ -272,6 +274,7 @@ struct Mainpage_View: View {
                         // 서버와 무관
                         focus: $isSearchFieldFocused
                     )
+                    
                     .padding(.horizontal, 16)
                     .padding(.top, 10)
                     .padding(.bottom, 12)

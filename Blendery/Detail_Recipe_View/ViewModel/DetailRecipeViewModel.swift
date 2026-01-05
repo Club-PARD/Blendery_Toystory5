@@ -23,6 +23,10 @@ final class DetailRecipeViewModel: ObservableObject {
         )
     }
     
+    var optionBadgeTags: [String] {
+            RecipeVariantType(rawValue: optionKey)?.optionTags ?? []
+        }
+    
     var currentSteps: [RecipeStep] {
         menu?.recipesByOption[optionKey]
         ?? menu?.recipesByOption.values.first

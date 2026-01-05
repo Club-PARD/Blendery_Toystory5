@@ -8,13 +8,24 @@
 import SwiftUI
 
 struct OptionButton: View {
+    
+    // 아이스 메뉴 토글 조정 코드로 수정하였음
     @Binding var temperature: Temperature
     @Binding var size: Size
 
+    let showTemperatureToggle: Bool
+    let showSizeToggle: Bool
+
     var body: some View {
         VStack(spacing: 16) {
-            TemperatureSegment(selected: $temperature)
-            SizeSegment(selected: $size)
+
+            if showTemperatureToggle {
+                TemperatureSegment(selected: $temperature)
+            }
+
+            if showSizeToggle {
+                SizeSegment(selected: $size)
+            }
         }
         .padding(16)
         .background(
