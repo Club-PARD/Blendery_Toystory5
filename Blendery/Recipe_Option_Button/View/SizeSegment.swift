@@ -8,22 +8,22 @@
 import SwiftUI
 
 struct SizeSegment: View {
-    @Binding var selected: CupSize
+    @Binding var selected: Size
 
     var body: some View {
         HStack(spacing: 4) {
             PillSegment(
                 title: "L",
-                isSelected: selected == .l
+                isSelected: selected == .large
             ) {
-                selected = .l
+                selected = .large
             }
 
             PillSegment(
                 title: "XL",
-                isSelected: selected == .xl
+                isSelected: selected == .extra
             ) {
-                selected = .xl
+                selected = .extra
             }
         }
         .padding(4)

@@ -7,10 +7,21 @@
 
 import Foundation
 
-enum Temperature {
-    case hot, ice
+enum Temperature: String {
+    case hot = "HOT"
+    case ice = "ICE"
 }
 
-enum CupSize {
-    case l, xl
+enum Size: String {
+    case large = "LARGE"
+    case extra = "EXTRA"
+}
+
+struct RecipeOptionKey {
+    static func make(
+        temperature: Temperature,
+        size: Size
+    ) -> String {
+        "\(temperature.rawValue)_\(size.rawValue)"
+    }
 }

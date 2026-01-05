@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct OptionButton: View {
-    @State private var temperature: Temperature = .ice
-    @State private var size: CupSize = .l
+    @Binding var temperature: Temperature
+    @Binding var size: Size
 
     var body: some View {
         VStack(spacing: 16) {
@@ -23,8 +23,4 @@ struct OptionButton: View {
         )
         .frame(width: 176.34)
     }
-}
-
-#Preview {
-    OptionButton()
 }

@@ -11,6 +11,7 @@ let categories: [String] = [
     "즐겨찾기",
     "시즌메뉴",
     "커피",
+    "콜드브루",
     "논커피",
     "에이드&과일주스",
     "블렌디드",
@@ -28,6 +29,8 @@ struct MenuCardModel: Identifiable, Hashable {
 
     var isImageLoading: Bool
     var imageName: String?
+    
+    let recipesByOption: [String: [RecipeStep]]
 
     init(
         id: UUID = UUID(),
@@ -36,6 +39,7 @@ struct MenuCardModel: Identifiable, Hashable {
         title: String,
         subtitle: String,
         lines: [String],
+        recipesByOption: [String: [RecipeStep]] = [:],
         isBookmarked: Bool,
         isImageLoading: Bool = false,
         imageName: String? = nil
@@ -46,6 +50,7 @@ struct MenuCardModel: Identifiable, Hashable {
         self.title = title
         self.subtitle = subtitle
         self.lines = lines
+        self.recipesByOption = recipesByOption
         self.isBookmarked = isBookmarked
         self.isImageLoading = isImageLoading
         self.imageName = imageName

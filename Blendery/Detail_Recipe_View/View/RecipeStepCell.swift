@@ -9,7 +9,7 @@ import SwiftUI
 
 struct RecipeStepCell: View {
     let index: Int
-    let text: String
+    let step: RecipeStep
 
     var body: some View {
         HStack(spacing: 11) {
@@ -20,7 +20,7 @@ struct RecipeStepCell: View {
                 .background(Color(red: 246/255, green: 246/255, blue: 246/255, opacity: 1))
                 .clipShape(Circle())
 
-            Text(text)
+            Text(step.text)
                 .font(.system(size: 16, weight: .medium))
                 .foregroundColor(.black)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -32,8 +32,4 @@ struct RecipeStepCell: View {
                 .stroke(Color(red: 239/255, green: 239/255, blue: 239/255, opacity: 1), lineWidth: 1)
         )
     }
-}
-
-#Preview {
-    RecipeStepCell(index: 1, text: "에스프레소 2샷")
 }

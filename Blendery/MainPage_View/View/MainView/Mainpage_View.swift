@@ -23,6 +23,11 @@ struct Mainpage_View: View {
 
     // 뷰 상태 변수
     @State private var showToast: Bool = false
+    
+    private struct RecipeNavID: Identifiable, Hashable {
+        let id: UUID
+    }
+    @State private var selectedRecipe: RecipeNavID? = nil
 
     // 상태 오브젝트
     // 메인 화면 데이터 소스 역할
@@ -107,7 +112,9 @@ struct Mainpage_View: View {
                     // 뷰 이벤트 전달
                     // 메뉴 선택 시 상세 이동을 위해 상태 갱신
                     // 서버와 무관
-                    onSelectMenu: { selectedMenu = $0 }
+                    onSelectMenu: { menu in
+                        selectedRecipe = RecipeNavID(id: menu.id)
+                    }
                 )
 
                 // 뷰 리프레시 트리거
@@ -140,7 +147,9 @@ struct Mainpage_View: View {
                 Mainpage_SearchOverlayView(
                     searchVM: searchVM,
                     results: searchVM.results.map { MenuCardModel.fromSearch($0) },
-                    onSelectMenu: { selectedMenu = $0 },
+                    onSelectMenu: { menu in
+                        selectedRecipe = RecipeNavID(id: menu.id)
+                    },
                     onToggleBookmark: { vm.toggleBookmark(id: $0) },
                     focus: $isSearchFieldFocused
                 )
@@ -199,12 +208,6 @@ struct Mainpage_View: View {
             }
         }
 
-        // 네비게이션 처리
-        // 서버와 무관
-        // 다만 상세 화면에서 서버로 상세 데이터를 다시 조회할 수도 있음
-        .navigationDestination(item: $selectedMenu) { menu in
-            DetailRecipeView(menu: menu, allMenus: vm.cards)
-        }
 
         // 네비게이션 처리
         // 현재는 하드코딩 데이터
@@ -219,6 +222,10 @@ struct Mainpage_View: View {
                     email: "l_oxo_l@handong.ac.kr"
                 )
             )
+        }
+        
+        .navigationDestination(item: $selectedRecipe) { nav in
+            DetailRecipeViewByID(recipeId: nav.id)
         }
 
         // 뷰 상태 업데이트
