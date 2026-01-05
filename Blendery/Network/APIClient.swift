@@ -73,4 +73,26 @@ final class APIClient {
 
         return try JSONDecoder().decode([RecipeModel].self, from: data)
     }
+    
+    func searchRecipes(keyword: String) async throws -> [SearchRecipeModel] {
+
+            var components = URLComponents(
+                string: "\(baseURL)/api/recipe/search/recipes"
+            )!
+
+            components.queryItems = [
+                URLQueryItem(name: "keyword", value: keyword)
+            ]
+
+            let url = components.url!
+            let (data, response) = try await URLSession.shared.data(from: url)
+
+            guard let http = response as? HTTPURLResponse,
+                  (200...299).contains(http.statusCode)
+            else {
+                throw URLError(.badServerResponse)
+            }
+
+            return try JSONDecoder().decode([SearchRecipeModel].self, from: data)
+        }
 }

@@ -67,7 +67,6 @@ struct Mainpage_View: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                Text("cards count: \(vm.cards.count)")
 
                 Mainpage_TopMenu(
                     // 뷰 이벤트 처리
@@ -115,11 +114,19 @@ struct Mainpage_View: View {
                 // 카테고리 바뀔 때 스크롤 뷰 상태 초기화 목적
                 // 서버와 무관
                 .id(selectedCategory)
-                .task {
-                    await vm.fetchRecipes(
-                        franchiseId: "ac120003-9b6e-19e0-819b-6e8a08870001",
-                        category: "COFFEE"
-                    )
+                .onChange(of: selectedCategory) { newCategory in
+                    Task {
+                        if newCategory == "즐겨찾기" {
+                            return
+                        }
+
+                        let serverCategory = vm.serverCategory(from: newCategory)
+
+                        await vm.fetchRecipes(
+                            franchiseId: "ac120003-9b6e-19e0-819b-6e8a08870001",
+                            category: serverCategory
+                        )
+                    }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -131,25 +138,10 @@ struct Mainpage_View: View {
             if searchVM.isFocused {
 
                 Mainpage_SearchOverlayView(
-                    // 검색 상태 오브젝트
-                    // 서버와 직접 무관
                     searchVM: searchVM,
-
-                    // 서버 데이터일 가능성 높음
-                    // 전체 메뉴 목록
-                    // 서버에서 내려받아 vm.cards로 가지고 있을 가능성 큼
-                    allMenus: vm.cards,
-
-                    // 서버 호출로 이어질 가능성 높음
-                    // 즐겨찾기 저장을 서버로 하려면 vm.toggleBookmark 내부에서 처리
-                    onToggleBookmark: { vm.toggleBookmark(id: $0) },
-
-                    // 뷰 네비게이션 이벤트
-                    // 선택 메뉴 설정 후 상세 이동
+                    results: searchVM.results.map { MenuCardModel.fromSearch($0) },
                     onSelectMenu: { selectedMenu = $0 },
-
-                    // 키보드 포커스 바인딩
-                    // 서버와 무관
+                    onToggleBookmark: { vm.toggleBookmark(id: $0) },
                     focus: $isSearchFieldFocused
                 )
                 .transition(.opacity)
@@ -200,6 +192,12 @@ struct Mainpage_View: View {
             }
         }
         .navigationBarBackButtonHidden(true)
+        
+        .onChange(of: searchVM.text) { _ in
+            Task {
+                await searchVM.search()
+            }
+        }
 
         // 네비게이션 처리
         // 서버와 무관

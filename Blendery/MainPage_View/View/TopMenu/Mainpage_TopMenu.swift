@@ -99,12 +99,3 @@ struct Mainpage_TopMenu: View {
         }
     }
 }
-
-#Preview {
-    Mainpage_TopMenu(
-        onTapStoreButton: {},
-        onTapProfileButton: {},
-        selectedCategory: .constant("즐겨찾기"),
-        vm: TopMenuViewModel(categories: ["즐겨찾기", "커피", "논커피", "아이스크림", "에이드"])
-    )
-}

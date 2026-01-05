@@ -42,6 +42,12 @@ struct SearchBarView: View {
                     .onSubmit {
                         onSearchTap?()
                     }
+                
+                    .onChange(of: vm.text) { _ in
+                        Task {
+                            await vm.search()
+                        }
+                    }
 
                 Spacer()
 

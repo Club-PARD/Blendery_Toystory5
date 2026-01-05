@@ -18,6 +18,10 @@ struct Mainpage_ScrollView: View {
 
     // 화면 이동용 이벤트
     var onSelectMenu: (MenuCardModel) -> Void = { _ in }
+    
+    private var items: [MenuCardModel] {
+        vm.normalItems(for: selectedCategory)
+    }
 
     var body: some View {
 
@@ -30,10 +34,6 @@ struct Mainpage_ScrollView: View {
             )
 
         } else {
-
-            // 서버 데이터일 가능성 높음
-            // vm이 카테고리에 맞는 목록을 만들어서 준 데이터
-            let items = vm.normalItems(for: selectedCategory)
 
             if selectedCategory == "시즌메뉴" {
 

@@ -13,12 +13,18 @@ final class MainpageViewModel: ObservableObject {
     
     private let categoryMap: [String: String] = [
         "커피": "COFFEE",
+        "콜드브루": "COLD_BREW",
+        "디카페인": "DECAFEINE",
         "논커피": "NON_COFFEE",
-        "에이드": "ADE",
-        "과일주스": "JUICE",
-        "시즌메뉴": "SEASON"
+        "블렌디드": "BLENDED",
+        "티": "TEA",
+        "에이드&과일주스": "ADE"
     ]
 
+    func serverCategory(from uiCategory: String) -> String? {
+        categoryMap[uiCategory]
+    }
+    
     @Published var cards: [MenuCardModel] = []
     @Published var toast: ToastData? = nil
 
@@ -108,21 +114,51 @@ final class MainpageViewModel: ObservableObject {
 //  검색창 뷰모델
 @MainActor
 final class SearchBarViewModel: ObservableObject {
+
     @Published var text: String = ""
     @Published var isFocused: Bool = false
+
+    // ⭐️ 추가
+    @Published var results: [SearchRecipeModel] = []
+    @Published var isLoading: Bool = false
 
     var hasText: Bool {
         !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     func open() { isFocused = true }
-    func clearText() { text = "" }
+    func clearText() {
+        text = ""
+        results = []
+    }
 
     func close() {
         text = ""
+        results = []
         isFocused = false
     }
+
+    // ⭐️ 서버 검색
+    func search() async {
+        guard hasText else {
+            results = []
+            return
+        }
+
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            results = try await APIClient.shared.searchRecipes(
+                keyword: text
+            )
+        } catch {
+            print("❌ 검색 실패:", error)
+            results = []
+        }
+    }
 }
+
 
 //  탑메뉴 뷰모델
 @MainActor

@@ -50,17 +50,18 @@ enum RecipeVariantType: String, Codable, Hashable {
 
 extension MenuCardModel {
 
+    // ✅ 메인 목록용 (RecipeModel → MenuCardModel)
     static func from(_ recipe: RecipeModel) -> MenuCardModel {
 
         let defaultVariant = recipe.variants.first { $0.isDefault }
             ?? recipe.variants.first
 
         return MenuCardModel(
-            id: recipe.id,
+            id: recipe.recipeId,
             category: recipe.category,
             tags: [],
             title: recipe.title,
-            subtitle: subtitle(from: defaultVariant),
+            subtitle: defaultVariant?.steps.first ?? "",
             lines: defaultVariant?.steps ?? [],
             isBookmarked: false,
             isImageLoading: false,
@@ -68,24 +69,27 @@ extension MenuCardModel {
         )
     }
 
-    // MARK: - Helpers
-
-    private static func tags(from variant: RecipeVariantModel?) -> [String] {
-        guard let variant else { return [] }
-
-        switch variant.type {
-        case .ICE_LARGE: return ["ICE", "L"]
-        case .ICE_SMALL: return ["ICE"]
-        case .HOT_LARGE: return ["HOT", "L"]
-        case .HOT_SMALL: return ["HOT"]
-        case .OTHER: return []
-        }
+    // ✅ 검색 결과용 (SearchRecipeModel → MenuCardModel)
+    static func fromSearch(_ model: SearchRecipeModel) -> MenuCardModel {
+        MenuCardModel(
+            id: model.recipeId,
+            category: model.category,
+            tags: searchTags(from: model),
+            title: model.title,
+            subtitle: "",
+            lines: [],
+            isBookmarked: false,
+            isImageLoading: false,
+            imageName: nil
+        )
     }
 
-    private static func subtitle(from variant: RecipeVariantModel?) -> String {
-        // 임시 규칙 (나중에 서버 필드 생기면 교체)
-        guard let variant else { return "" }
-        return "\(variant.steps.first ?? "")"
+    // 🔎 검색 전용 태그
+    private static func searchTags(from model: SearchRecipeModel) -> [String] {
+        var tags: [String] = []
+        if model.signature { tags.append("SIGNATURE") }
+        if model.new { tags.append("NEW") }
+        return tags
     }
 }
 
