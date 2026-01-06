@@ -2,7 +2,17 @@ import SwiftUI
 import UIKit
 
 private final class SecureTextField: UITextField {
-    override var canBecomeFirstResponder: Bool { false }   // 본체는 키보드 못 띄우게
+
+    override var canBecomeFirstResponder: Bool { false } // 키보드 방지
+
+    // ✅ 핵심: TextField "본체"가 터치를 먹지 않도록
+    // - subview(= 우리가 올린 host.view)가 hit 되면 그대로 반환
+    // - 본체(self)가 hit 되면 nil 반환 -> SwiftUI 쪽 제스처(TabView 스와이프 등) 살아남
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        let result = super.hitTest(point, with: event)
+        if result === self { return nil }
+        return result
+    }
 }
 
 struct ScreenshotShield<Content: View>: UIViewRepresentable {
@@ -27,7 +37,7 @@ struct ScreenshotShield<Content: View>: UIViewRepresentable {
         secureField.tintColor = .clear
         secureField.borderStyle = .none
 
-        // ✅ 여기 절대 false로 하면 안 됨 (터치/스크롤 다 죽는 원인)
+        // ✅ true 유지 (secure container 역할)
         secureField.isUserInteractionEnabled = true
 
         container.addSubview(secureField)

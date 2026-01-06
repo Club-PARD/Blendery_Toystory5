@@ -9,32 +9,35 @@ import UIKit
 struct SearchBarView: View {
     // ✅ 상태 오브젝트 : 검색 VM
     @ObservedObject var vm: SearchBarViewModel
-
+    
     // ✅ 외부 주입 값
     var placeholder: String = "검색"
     var onSearchTap: (() -> Void)? = nil
-
+    
+    var onOpen: (() -> Void)? = nil
+    
     // ✅ 포커스 바인딩(필수)
     var focus: FocusState<Bool>.Binding
-
+    
     private let orange = Color(red: 0.89, green: 0.19, blue: 0)
-
+    
     var body: some View {
         HStack(spacing: 10) {
-
+            
             // ✅ 검색창(테두리 있는 박스)
             HStack(spacing: 10) {
-
+                
                 // ✅ 돋보기(왼쪽 고정)
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(orange)
                     .padding(.leading, 18)
-
+                
                 // ✅ 텍스트필드
                 TextField(placeholder, text: $vm.text)
                     .focused(focus)
-                    .onTapGesture { vm.open() }
+                    .onTapGesture {                         onOpen?()
+                    }
                     .font(.system(size: 16))
                     .foregroundColor(.black)
                     .padding(.vertical, 12)
@@ -48,9 +51,9 @@ struct SearchBarView: View {
                             await vm.search()
                         }
                     }
-
+                
                 Spacer()
-
+                
                 // ✅ 검색 켜졌고 + 텍스트 있을 때만: 오른쪽 작은 X
                 if vm.isFocused && vm.hasText {
                     Button { vm.clearText() } label: {
@@ -72,7 +75,7 @@ struct SearchBarView: View {
             )
             .cornerRadius(30)
             .frame(height: 50)
-
+            
             // ✅ 오른쪽 큰 X(검색 종료)
             if vm.isFocused {
                 Button {
@@ -92,7 +95,7 @@ struct SearchBarView: View {
             }
         }
         .padding(.horizontal, 16)
-
+        
         // ✅ FocusState 동기화(양방향) — Mainpage_View에서 빼고 여기서 해결
         .onChange(of: vm.isFocused) { newValue in
             if focus.wrappedValue != newValue {
@@ -108,7 +111,7 @@ struct SearchBarView: View {
             }
         }
     }
-
+    
     private func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
                                         to: nil, from: nil, for: nil)

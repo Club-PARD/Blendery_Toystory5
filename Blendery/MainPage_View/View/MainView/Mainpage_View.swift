@@ -7,20 +7,22 @@ import SwiftUI
 import UIKit
 
 struct Mainpage_View: View {
-
+    
     // 뷰 상태 변수
     @State private var showStoreModal: Bool = false
-
+    
+    @State private var goStaffList: Bool = false
+    
     // 뷰 상태 변수
     // 서버가 카테고리별 데이터를 내려주는 구조면 선택값이 서버 요청 조건이 될 수 있음
     @State private var selectedCategory: String = "즐겨찾기"
-
+    
     // 뷰 상태 변수
     @State private var toastMessage: String = ""
-
+    
     // 뷰 상태 변수
     @State private var toastIconName: String? = nil
-
+    
     // 뷰 상태 변수
     @State private var showToast: Bool = false
     
@@ -28,18 +30,19 @@ struct Mainpage_View: View {
         let id: UUID
     }
     @State private var selectedRecipe: RecipeNavID? = nil
-
+    
+    
     // 상태 오브젝트
     // 메인 화면 데이터 소스 역할
     // 서버 연결 핵심 후보
     // 메뉴 목록 조회, 즐겨찾기 토글 저장, 로딩 상태 등이 여기로
     @StateObject private var vm = MainpageViewModel()
-
+    
     // 상태 오브젝트
     // 검색 입력과 포커스 상태 담당
     // 서버 검색을 붙이면 여기의 text가 서버 요청 조건이 될 수 있음
     @StateObject private var searchVM = SearchBarViewModel()
-
+    
     // 상태 오브젝트
     // 상단 카테고리 메뉴 데이터 소스
     // 보통은 로컬 상수지만 서버에서 카테고리를 내려주는 구조면 서버 데이터가 될 수도 있음
@@ -49,32 +52,33 @@ struct Mainpage_View: View {
         // 서버와 무관
         _topMenuVM = StateObject(wrappedValue: TopMenuViewModel(categories: categories))
     }
-
+    
     // 뷰 포커스 상태
     // 키보드 포커스 관리
     // 서버와 무관
     @FocusState private var isSearchFieldFocused: Bool
-
+    
     // 뷰 네비게이션 상태
     // 상세 화면으로 넘길 선택 메뉴
     // 서버 데이터일 가능성 높음
     // 선택된 MenuCardModel 자체는 서버에서 내려받은 모델일 가능성이 큼
     @State private var selectedMenu: MenuCardModel? = nil
-
+    
     // 뷰 네비게이션 상태
     // 프로필 화면 이동 여부
     // 서버와 무관
     @State private var showProfile = false
     
     @State private var showSearchSheet = false
-
+    
     var body: some View {
         ZStack {
             Color(red: 0.97, green: 0.97, blue: 0.97)
                 .ignoresSafeArea()
-
+            
             VStack(spacing: 0) {
-
+                
+                
                 Mainpage_TopMenu(
                     // 뷰 이벤트 처리
                     // 서버와 무관
@@ -82,36 +86,46 @@ struct Mainpage_View: View {
                     onTapStoreButton: {
                         withAnimation(.easeInOut(duration: 0.25)) { showStoreModal = true }
                     },
-
+                    
                     // 뷰 이벤트 처리
                     // 서버와 무관
                     onTapProfileButton: {
                         showProfile = true
                     },
-
+                    
+                    onTapAdminButton: {
+                        // ✅ [동작] StaffList로 이동
+                        goStaffList = true
+                    },
+                    
                     // 뷰 상태 바인딩
                     // 선택된 카테고리 값 전달
                     // 서버와 직접 무관
                     // 카테고리별 서버 조회 구조라면 서버 요청 조건 역할
                     selectedCategory: $selectedCategory,
-
+                    
                     // 화면 구성용 데이터 소스
                     // 서버와 직접 무관
                     vm: topMenuVM
                 )
                 .background(Color.white)
-
-                ScreenshotShield {
-                    Mainpage_ScrollView(
-                        selectedCategory: selectedCategory,
-                        vm: vm,
-                        onSelectMenu: { menu in
-                            selectedRecipe = RecipeNavID(id: menu.id)
+                
+                TabView(selection: $selectedCategory) {
+                    ForEach(topMenuVM.categories, id: \.self) { category in
+                        ScreenshotShield {
+                            Mainpage_ScrollView(
+                                selectedCategory: category,
+                                vm: vm,
+                                onSelectMenu: { menu in
+                                    selectedRecipe = RecipeNavID(id: menu.id)
+                                }
+                            )
                         }
-                    )
+                        .tag(category) // ✅ TabView selection과 연결
+                    }
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity) // ✅ 리스트 영역 꽉 채우기(중요)
-                .id(selectedCategory)
+                .tabViewStyle(.page(indexDisplayMode: .never)) // ✅ 아래 점(페이지 인디케이터) 숨김
+                .frame(maxWidth: .infinity, maxHeight: .infinity) // ✅ frame은 여기(TabView)에만 1번
                 .onChange(of: selectedCategory) { newCategory in
                     Task {
                         if newCategory == "즐겨찾기" { return }
@@ -122,65 +136,38 @@ struct Mainpage_View: View {
                         )
                     }
                 }
-
-                
-                .id(selectedCategory)
-                .onChange(of: selectedCategory) { newCategory in
-                    Task {
-                        if newCategory == "즐겨찾기" {
-                            return
-                        }
-
-                        let serverCategory = vm.serverCategory(from: newCategory)
-
-                        await vm.fetchRecipes(
-                            franchiseId: "ac120003-9b6e-19e0-819b-6e8a08870001",
-                            category: serverCategory
-                        )
-                    }
-                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             
-
+            
             // 검색 오버레이 표시 조건
             // 뷰 상태 기반
             // 서버와 무관
-            if searchVM.isFocused {
-                RecipeSearchOverlayView(
-                    searchVM: searchVM,
-                    focus: $isSearchFieldFocused,
-                    onSelect: { recipeId in
-                        selectedRecipe = RecipeNavID(id: recipeId)
-                    }
-                )
-                .transition(.opacity)
-                .zIndex(50)
-            }
-
+            
+            
             // 스토어 선택 모달 표시 조건
             // 뷰 상태 기반
             // 서버와 무관
             if showStoreModal {
                 Color.black.opacity(0.25)
                     .ignoresSafeArea()
-
-                    // 뷰 이벤트 처리
-                    // 서버와 무관
+                
+                // 뷰 이벤트 처리
+                // 서버와 무관
                     .onTapGesture {
                         withAnimation(.easeInOut(duration: 0.2)) { showStoreModal = false }
                     }
                     .zIndex(90)
-
+                
                 GeometryReader { geo in
                     VStack(spacing: 0) {
-
+                        
                         // UI 안전영역 처리
                         // 서버와 무관
                         
                         Color.white
                             .frame(height: geo.safeAreaInsets.top)
-
+                        
                         StoreSelectPanel(
                             // 뷰 이벤트 처리
                             // 서버와 무관
@@ -192,7 +179,7 @@ struct Mainpage_View: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .top)
                     .background(Color.white)
-
+                    
                     // UI 모서리 처리
                     // 서버와 무관
                     .clipShape(RoundedCorner(radius: 16, corners: [.bottomLeft, .bottomRight]))
@@ -209,8 +196,8 @@ struct Mainpage_View: View {
                 await searchVM.search()
             }
         }
-
-
+        
+        
         // 네비게이션 처리
         // 현재는 하드코딩 데이터
         // 서버 연동 시 UserProfile이 서버 데이터가 될 수 있음
@@ -226,10 +213,14 @@ struct Mainpage_View: View {
             )
         }
         
+        .navigationDestination(isPresented: $goStaffList) {
+            StaffList_View()
+        }
+        
         .navigationDestination(item: $selectedRecipe) { nav in
             DetailRecipeViewByID(recipeId: nav.id)
         }
-
+        
         // 뷰 상태 업데이트
         // vm.toast 값 변화를 받아 토스트 표시
         // vm.toast가 서버 응답에 의해 세팅될 수는 있음
@@ -238,7 +229,7 @@ struct Mainpage_View: View {
             presentToast(newToast)
             vm.clearToast()
         }
-
+        
         // UI 오버레이
         // 서버와 무관
         .overlay(alignment: .bottom) {
@@ -249,14 +240,14 @@ struct Mainpage_View: View {
                     .zIndex(999)
             }
         }
-
+        
         // 하단 검색바 영역 배치
         // 서버와 무관
         // 검색 서버 연동 시 searchVM.text가 서버 요청 조건이 됨
         .safeAreaInset(edge: .bottom, spacing: 0) {
             GeometryReader { geo in
                 VStack(spacing: 0) {
-
+                    
                     SearchBarView(
                         vm: searchVM,
                         placeholder: "검색",
@@ -272,14 +263,14 @@ struct Mainpage_View: View {
                     .allowsHitTesting(!showStoreModal)
                     .opacity(showStoreModal ? 0.35 : 1.0)
                     .animation(.easeInOut(duration: 0.18), value: showStoreModal)
-
+                    
                     // 안전영역 하단 패딩 처리
                     // 서버와 무관
                     Color.clear
                         .frame(height: geo.safeAreaInsets.bottom)
                 }
                 .frame(maxWidth: .infinity)
-
+                
                 // UI 배경 처리
                 // 서버와 무관
                 .background(Color.white.opacity(0.95))
@@ -299,16 +290,16 @@ struct Mainpage_View: View {
 // 서버와 무관
 private extension Mainpage_View {
     func presentToast(_ data: ToastData) {
-
+        
         // UI 상태값 세팅
         // 서버와 무관
         toastMessage = data.message
         toastIconName = data.iconName
-
+        
         withAnimation(.easeOut(duration: 0.2)) {
             showToast = true
         }
-
+        
         // UI 타이머로 자동 종료
         // 서버와 무관
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
