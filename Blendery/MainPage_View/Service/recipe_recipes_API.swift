@@ -44,9 +44,17 @@ extension BlenderyAPI {
         request.httpMethod = "GET"
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
+        if let token = TokenStore.loadAccessToken() {
+            request.setValue(
+                "Bearer \(token)",
+                forHTTPHeaderField: "Authorization"
+            )
+        }
+
         let (data, response) = try await URLSession.shared.data(for: request)
         try validate(response)
 
         return try JSONDecoder().decode([RecipeModel].self, from: data)
     }
 }
+

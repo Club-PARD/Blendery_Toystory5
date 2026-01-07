@@ -37,15 +37,14 @@ final class MainpageViewModel: ObservableObject {
     ) async {
 
         do {
-            let recipes = try await APIClient.shared.fetchRecipes(
+            let recipes = try await BlenderyAPI.shared.searchRecipes(
                 franchiseId: franchiseId,
                 category: category,
                 favorite: favorite
             )
 
-            // 🔄 서버 모델 → UI 모델 변환
-            self.cards = recipes.map { recipe in
-                MenuCardModel.from(recipe)
+            self.cards = recipes.map {
+                MenuCardModel.from($0)
             }
 
         } catch {
@@ -149,7 +148,7 @@ final class SearchBarViewModel: ObservableObject {
         defer { isLoading = false }
 
         do {
-            results = try await APIClient.shared.searchRecipes(
+            results = try await BlenderyAPI.shared.searchRecipes(
                 keyword: text
             )
         } catch {

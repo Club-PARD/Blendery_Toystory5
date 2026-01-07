@@ -1,99 +1,109 @@
+////
+////  APIClient.swift
+////  Blendery
+////
+////  Created by 박영언 on 12/29/25.
+////
 //
-//  APIClient.swift
-//  Blendery
+//import Foundation
 //
-//  Created by 박영언 on 12/29/25.
+//final class APIClient {
+//    
+//    static let shared = APIClient()
+//    private init() {}
+//    
+//    private let baseURL = BaseURL.baseUrl.rawValue
+//    
+//    func fetchRecipes(
+//        franchiseId: String,
+//        category: String? = nil,
+//        favorite: Bool? = nil
+//    ) async throws -> [RecipeModel] {
+//        
+//        var components = URLComponents(string: "\(baseURL)/api/recipe/recipes")!
+//        var queryItems: [URLQueryItem] = [
+//            URLQueryItem(name: "franchiseId", value: franchiseId)
+//        ]
+//        
+//        if let category {
+//            queryItems.append(
+//                URLQueryItem(name: "category", value: category)
+//            )
+//        }
+//        
+//        if let favorite {
+//            queryItems.append(
+//                URLQueryItem(name: "favorite", value: String(favorite))
+//            )
+//        }
+//        
+//        components.queryItems = queryItems
+//        
+//        guard let url = components.url else {
+//            throw URLError(.badURL)
+//        }
+//        
+//        var request = URLRequest(url: url)
+//        request.httpMethod = "GET"
 //
-
-import Foundation
-
-final class APIClient {
-    
-    static let shared = APIClient()
-    private init() {}
-    
-    private let baseURL = BaseURL.baseUrl.rawValue
-    
-    func fetchRecipes(
-        franchiseId: String,
-        category: String? = nil,
-        favorite: Bool? = nil
-    ) async throws -> [RecipeModel] {
-        
-        var components = URLComponents(string: "\(baseURL)/api/recipe/recipes")!
-        var queryItems: [URLQueryItem] = [
-            URLQueryItem(name: "franchiseId", value: franchiseId)
-        ]
-        
-        if let category {
-            queryItems.append(
-                URLQueryItem(name: "category", value: category)
-            )
-        }
-        
-        if let favorite {
-            queryItems.append(
-                URLQueryItem(name: "favorite", value: String(favorite))
-            )
-        }
-        
-        components.queryItems = queryItems
-        
-        guard let url = components.url else {
-            throw URLError(.badURL)
-        }
-        
-        let (data, response) = try await URLSession.shared.data(from: url)
-        
-        if let http = response as? HTTPURLResponse {
-            print("📡 statusCode:", http.statusCode)
-        }
-        
-        print("📦 raw response:", String(data: data, encoding: .utf8) ?? "nil")
-        
-        guard let http = response as? HTTPURLResponse,
-              (200...299).contains(http.statusCode)
-        else {
-            throw URLError(.badServerResponse)
-        }
-        
-        return try JSONDecoder().decode([RecipeModel].self, from: data)
-    }
-    
-    func searchRecipes(keyword: String) async throws -> [SearchRecipeModel] {
-        
-        var components = URLComponents(
-            string: "\(baseURL)/api/recipe/search/recipes"
-        )!
-        
-        components.queryItems = [
-            URLQueryItem(name: "keyword", value: keyword)
-        ]
-        
-        let url = components.url!
-        let (data, response) = try await URLSession.shared.data(from: url)
-        
-        guard let http = response as? HTTPURLResponse,
-              (200...299).contains(http.statusCode)
-        else {
-            throw URLError(.badServerResponse)
-        }
-        
-        return try JSONDecoder().decode([SearchRecipeModel].self, from: data)
-    }
-    
-    func fetchRecipeDetail(recipeId: UUID) async throws -> RecipeModel {
-        // ✅ 기존 엔드포인트 패턴 그대로 유지
-        let url = URL(string: "\(baseURL)/api/recipe/\(recipeId.uuidString)")!
-
-        let (data, response) = try await URLSession.shared.data(from: url)
-
-        guard let http = response as? HTTPURLResponse,
-              (200...299).contains(http.statusCode)
-        else {
-            throw URLError(.badServerResponse)
-        }
-
-        return try JSONDecoder().decode(RecipeModel.self, from: data)
-    }
-}
+//        if let token = TokenStore.loadAccessToken() {
+//            request.setValue(
+//                "Bearer \(token)",
+//                forHTTPHeaderField: "Authorization"
+//            )
+//        }
+//        
+//        let (data, response) = try await URLSession.shared.data(for: request)
+//        
+//        if let http = response as? HTTPURLResponse {
+//            print("📡 statusCode:", http.statusCode)
+//            print("📦 headers:", request.allHTTPHeaderFields ?? [:])
+//            print("📦 raw:", String(data: data, encoding: .utf8) ?? "nil")
+//        }
+//        
+//        guard let http = response as? HTTPURLResponse,
+//              (200...299).contains(http.statusCode)
+//        else {
+//            throw URLError(.badServerResponse)
+//        }
+//        
+//        return try JSONDecoder().decode([RecipeModel].self, from: data)
+//    }
+//    
+//    func searchRecipes(keyword: String) async throws -> [SearchRecipeModel] {
+//        
+//        var components = URLComponents(
+//            string: "\(baseURL)/api/recipe/search/recipes"
+//        )!
+//        
+//        components.queryItems = [
+//            URLQueryItem(name: "keyword", value: keyword)
+//        ]
+//        
+//        let url = components.url!
+//        let (data, response) = try await URLSession.shared.data(from: url)
+//        
+//        guard let http = response as? HTTPURLResponse,
+//              (200...299).contains(http.statusCode)
+//        else {
+//            throw URLError(.badServerResponse)
+//        }
+//        
+//        return try JSONDecoder().decode([SearchRecipeModel].self, from: data)
+//    }
+//    
+//    func fetchRecipeDetail(recipeId: UUID) async throws -> RecipeModel {
+//        // ✅ 기존 엔드포인트 패턴 그대로 유지
+//        let url = URL(string: "\(baseURL)/api/recipe/\(recipeId.uuidString)")!
+//
+//        let (data, response) = try await URLSession.shared.data(from: url)
+//
+//        guard let http = response as? HTTPURLResponse,
+//              (200...299).contains(http.statusCode)
+//        else {
+//            throw URLError(.badServerResponse)
+//        }
+//
+//        return try JSONDecoder().decode(RecipeModel.self, from: data)
+//    }
+//}

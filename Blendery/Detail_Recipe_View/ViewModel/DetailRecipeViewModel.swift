@@ -38,14 +38,21 @@ final class DetailRecipeViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
-        
+
         do {
-            let recipe = try await APIClient.shared.fetchRecipeDetail(recipeId: recipeId)
-            menu = MenuCardModel.from(recipe)
-            
-            // ✅ 여기서 확인용 print
+            let recipe = try await BlenderyAPI.shared.fetchRecipeDetail(
+                recipeId: recipeId
+            )
+
+            self.menu = MenuCardModel.from(recipe)
+
+            // ✅ 옵션 디버그
             print("현재 옵션 키:", optionKey)
-            
+
+        } catch APIError.unauthorized {
+            errorMessage = "로그인이 만료되었습니다."
+            TokenStore.clear()
+
         } catch {
             errorMessage = error.localizedDescription
         }
