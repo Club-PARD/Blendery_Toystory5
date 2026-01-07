@@ -29,9 +29,10 @@ struct Mainpage_TopMenu: View {
                         .scaledToFit()
                         .frame(width: 111, height: 10)
                     
-                    Image("아래")
+                    Image(systemName: "chevron.down")
                         .resizable()
-                        .frame(width: 13, height: 10)
+                        .frame(width: 14, height: 8)
+                        .foregroundColor(Color(red: 204/255, green: 204/255, blue: 204/255, opacity: 1))
                     
                     Spacer()
                 }

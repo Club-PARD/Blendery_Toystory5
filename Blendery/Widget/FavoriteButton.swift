@@ -13,7 +13,7 @@ struct FavoriteButton: View {
         Button {
             isFavorite.toggle()
         } label: {
-            Image(isFavorite ? "favoriteIcon_red" : "favoriteIcon_outline")
+            Image(systemName: isFavorite ? "bookmark.fill" : "bookmark")
                 .resizable()
                 .frame(width: 15.2, height: 18.25)
         }

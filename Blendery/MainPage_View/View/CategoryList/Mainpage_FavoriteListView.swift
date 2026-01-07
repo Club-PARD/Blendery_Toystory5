@@ -159,7 +159,7 @@ private struct MenuCardView: View {
             .padding(14)
 
             Button(action: onToggleBookmark) {
-                Image(model.isBookmarked ? "즐찾아이콘" : "즐찾끔")
+                Image(systemName: model.isBookmarked ? "bookmark.fill" : "bookmark")
                     .resizable()
                     .frame(width: 14, height: 17)
                     .padding(12)
