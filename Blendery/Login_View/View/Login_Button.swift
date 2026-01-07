@@ -9,23 +9,15 @@ import SwiftUI
 
 struct Login_Button: View {
 
-    // [상태/뷰모델 변수]
-    // - 내부에 email/password 서버 요청 데이터, isLoading/isLoggedIn/errorMessage UI 상태 등을 들고 있음
-    // - 여기서는 주로 isLoading 같은 "UI 상태"를 읽어서 버튼/스피너에 반영
-    @StateObject private var viewModel = LoginViewModel()
-
-    // 상태 변수 화면 전환용
-    // - NavigationLink를 트리거하기 위한 로컬 UI 상태
-    @State private var goMain: Bool = false
+    // ✅ LoginView에서 만든 vm 공유
+    @ObservedObject var viewModel: LoginViewModel
 
     var body: some View {
         ZStack {
             Button(action: {
-                goMain = true
+                // ✅ 여기서 “진짜 로그인” 실행
+                viewModel.login()
             }) {
-
-                // UI 상태 반영
-                // - viewModel.isLoading 값에 따라 스피너/텍스트를 바꿈
                 if viewModel.isLoading {
                     ProgressView()
                         .progressViewStyle(
@@ -40,16 +32,12 @@ struct Login_Button: View {
             .background(Color.white)
             .foregroundColor(.black)
             .cornerRadius(30)
-
-            // UI 상태 반영
-            // - 로딩 중이면 버튼 비활성화
             .disabled(viewModel.isLoading)
 
-            // 상태 기반 네비게이션
-            // - goMain이 true가 되면 Mainpage_View로 이동
+            // ✅ 로그인 성공해야만 메인으로 이동
             NavigationLink(
                 destination: Mainpage_View(),
-                isActive: $goMain
+                isActive: $viewModel.isLoggedIn
             ) {
                 EmptyView()
             }
@@ -59,5 +47,5 @@ struct Login_Button: View {
 }
 
 #Preview {
-    Login_Button()
+    Login_Button(viewModel: LoginViewModel())
 }

@@ -10,15 +10,15 @@ import SwiftUI
 struct Login_ID_PW: View {
 
     // 상태/서버 공통 변수
-    // - LoginViewModel을 View에서 관찰하기 위한
+    // - LoginView에서 만든 LoginViewModel을 주입 받아서 공유
     // - 여기서는 email/password 입력값(서버로 보낼 데이터)을 저장하는 용도
     // - errorMessage는 UI에서 빨간 테두리/에러 텍스트 표시용 상태로도 사용
-    @StateObject private var viewModel = LoginViewModel()
+    @ObservedObject var viewModel: LoginViewModel
 
     // 상태 변수
     // - 비밀번호를 보이게/가리게 하는 UI 상태
     @State private var isPasswordVisible: Bool = false
-    
+
     var body: some View {
 
         VStack() {
@@ -54,7 +54,7 @@ struct Login_ID_PW: View {
             )
         }
         .padding(.bottom, 8)
-        
+
         // 비번
         VStack() {
             ZStack(alignment: .leading) {
@@ -110,7 +110,7 @@ struct Login_ID_PW: View {
                 RoundedRectangle(cornerRadius: 30)
                     .stroke(viewModel.errorMessage != nil ? Color.red : Color(red: 0.15, green: 0.15, blue: 0.15), lineWidth: 1)
             )
-            
+
             // - viewModel.errorMessage는 로그인 실패 시(LoginViewModel.login() catch) 세팅되는 UI 상태
             if let errorMessage = viewModel.errorMessage {
                 Text(errorMessage)
@@ -122,6 +122,7 @@ struct Login_ID_PW: View {
         }
     }
 }
+
 #Preview {
-    Login_ID_PW()
+    Login_ID_PW(viewModel: LoginViewModel())
 }

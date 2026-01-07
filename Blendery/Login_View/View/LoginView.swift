@@ -8,29 +8,25 @@
 import SwiftUI
 
 struct LoginView: View {
+
+    // ✅ 화면 전체에서 VM 1개만 사용
+    @StateObject private var vm = LoginViewModel()
+
     var body: some View {
         VStack(spacing: 0) {
-            Login_ID_PW()
+
+            // ✅ 같은 vm을 주입
+            Login_ID_PW(viewModel: vm)
 
             Login_AutoLogin()
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.vertical, 16)
 
-            Login_Button()
+            // ✅ 같은 vm을 주입
+            Login_Button(viewModel: vm)
         }
-        .frame(maxWidth: .infinity)     // ⭐️ 내부 레이아웃 폭 안정화
+        .frame(maxWidth: .infinity)
         .padding(.horizontal, 50)
-    }
-}
-
-struct LoginView_Previews: PreviewProvider {
-    static var previews: some View {
-        NavigationStack {
-            ZStack {
-                Color.black.ignoresSafeArea()
-                LoginView()
-            }
-        }
     }
 }
 
