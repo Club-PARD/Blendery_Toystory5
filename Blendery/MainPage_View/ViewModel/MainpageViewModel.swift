@@ -174,23 +174,39 @@ final class TopMenuViewModel: ObservableObject {
     @Published var categoryFrames: [String: CGRect] = [:]
 
     let categories: [String]
-    let favoriteOrange = Color(red: 0.89, green: 0.19, blue: 0)
-
+    
+    private let favoriteRed = Color(red: 238/255, green: 34/255, blue: 42/255)
+    private let seasonBlue = Color(red: 36/255, green: 60/255, blue: 131/255)
+    
     init(categories: [String]) {
         self.categories = categories
+    }
+    
+    func textColor(for category: String) -> Color {
+        switch category {
+        case "즐겨찾기":
+            return favoriteRed
+        case "시즌메뉴":
+            return seasonBlue
+        default:
+            return .black
+        }
+    }
+    
+    func indicatorColor(for selectedCategory: String) -> Color {
+        switch selectedCategory {
+        case "즐겨찾기":
+            return favoriteRed
+        case "시즌메뉴":
+            return seasonBlue
+        default:
+            return .black
+        }
     }
 
     var favoriteKey: String { categories.first ?? "즐겨찾기" }
 
     func isFavorite(_ category: String) -> Bool {
         category == favoriteKey
-    }
-
-    func indicatorColor(for selectedCategory: String) -> Color {
-        isFavorite(selectedCategory) ? favoriteOrange : .black
-    }
-
-    func textColor(for category: String) -> Color {
-        isFavorite(category) ? favoriteOrange : .black
     }
 }

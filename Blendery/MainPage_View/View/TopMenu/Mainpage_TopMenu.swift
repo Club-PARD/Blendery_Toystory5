@@ -41,22 +41,24 @@ struct Mainpage_TopMenu: View {
             .padding(.top, 20)
             .buttonStyle(.plain)
             
-            HStack {
+            HStack(spacing: 18) {
                 Text("Blendery")
                     .font(.system(size: 34, weight: .bold))
                 Spacer()
                 
                 Button(action:onTapAdminButton)  {
-                    Image("관리자")
+                    Image("직원관리")
                         .resizable()
-                        .frame(width: 24, height: 24)
+                        .scaledToFit()
+                        .frame(width: 23, height: 23)
                 }
                 .buttonStyle(.plain)
                 
                 Button(action: onTapProfileButton) {
                     Image("사람")
                         .resizable()
-                        .frame(width: 24, height: 24)
+                        .scaledToFit()
+                        .frame(width: 16, height: 24)
                 }
                 .buttonStyle(.plain)
             }
