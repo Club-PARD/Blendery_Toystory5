@@ -32,8 +32,8 @@ struct Mainpage_View: View {
     }
     @State private var selectedRecipe: RecipeNavID? = nil
     
-    private var userId: String {
-        SessionManager.shared.currentUserId ?? ""
+    private var userId: String? {
+        SessionManager.shared.currentUserId
     }
     
     
@@ -136,6 +136,10 @@ struct Mainpage_View: View {
                     Task {
                         if newCategory == "즐겨찾기" { return }
                         let serverCategory = vm.serverCategory(from: newCategory)
+                        guard let userId else {
+                            print("🚫 userId 없음 - API 호출 차단")
+                            return
+                        }
                         await vm.fetchRecipes(
                             userId: userId,
                             franchiseId: "ac120003-9b6e-19e0-819b-6e8a08870001",
@@ -226,7 +230,15 @@ struct Mainpage_View: View {
         }
         
         .navigationDestination(item: $selectedRecipe) { nav in
-            DetailRecipeViewByID(recipeId: nav.id, userId: userId)
+            if let userId {
+                DetailRecipeViewByID(
+                    recipeId: nav.id,
+                    userId: userId
+                )
+            } else {
+                // 로그아웃 상태에서 들어오는 걸 방어
+                EmptyView()
+            }
         }
         
         // 뷰 상태 업데이트

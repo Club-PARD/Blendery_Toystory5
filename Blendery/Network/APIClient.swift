@@ -45,6 +45,10 @@ final class APIClient {
         category: String? = nil,
         favorite: Bool? = nil
     ) async throws -> [RecipeModel] {
+        guard SessionManager.shared.currentUserId == userId else {
+            print("⛔️ API 차단 - 로그아웃 상태")
+            return []
+        }
         
         var components = URLComponents(string: "\(baseURL)/api/recipe/recipes")!
         
@@ -93,6 +97,10 @@ final class APIClient {
         userId: String,
         keyword: String
     ) async throws -> [SearchRecipeModel] {
+        guard SessionManager.shared.currentUserId == userId else {
+            print("⛔️ API 차단 - 로그아웃 상태")
+            return []
+        }
         
         var components = URLComponents(
             string: "\(baseURL)/api/recipe/search/recipes"
@@ -123,6 +131,9 @@ final class APIClient {
         userId: String,
         recipeId: UUID
     ) async throws -> RecipeModel {
+        guard SessionManager.shared.currentUserId == userId else {
+            throw URLError(.userAuthenticationRequired)
+        }
         
         let url = URL(string: "\(baseURL)/api/recipe/\(recipeId.uuidString)")!
         

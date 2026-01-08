@@ -10,6 +10,8 @@ import SwiftUI
 struct RootView: View {
     
     @State private var isLoggedIn = false
+    @State private var loginViewID = UUID()
+    @State private var mainViewID = UUID()
     
     var body: some View {
         NavigationStack {
@@ -20,12 +22,15 @@ struct RootView: View {
                             logout()
                         }
                     )
+                    .id(mainViewID)
                 } else {
                     OnboardingAnimationView(
                         onLoginSuccess: {
                             isLoggedIn = true
+                            mainViewID = UUID()
                         }
                     )
+                    .id(loginViewID)
                 }
             }
         }
@@ -52,6 +57,10 @@ struct RootView: View {
         KeychainHelper.shared.deleteToken(for: userId)
         SessionManager.shared.currentUserId = nil
         
+        mainViewID = UUID()
+        print("MainView 리셋")
+        loginViewID = UUID()
+        print("LoginView 리셋")
         isLoggedIn = false
         print("로그아웃 완료")
     }
