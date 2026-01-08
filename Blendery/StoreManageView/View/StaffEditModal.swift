@@ -1,189 +1,146 @@
+import SwiftUI
+
 // ===============================
 //  StaffEditModal.swift
 // ===============================
 
-import SwiftUI
-import Combine
-import UIKit
-
 struct StaffEditModal: View {
 
+    // [입력 변수]
     let member: StaffMember
-
     let onSave: (StaffMember) -> Void
-    let onDelete: (StaffMember) -> Void
     let onClose: () -> Void
 
-    @State private var isDropdownOpen: Bool = false
-    @State private var tempRole: StaffMember.Role = .staff
-    @State private var showDeleteConfirm: Bool = false
+    // [상태 변수]
+    @State private var showChangeConfirm: Bool = false
+    @State private var pendingRole: StaffMember.Role? = nil
 
     var body: some View {
         ZStack {
-            Color(red: 0.97, green: 0.97, blue: 0.97)
+            // ✅ 모달 배경: 흰색
+            Color.white
                 .ignoresSafeArea()
 
-            VStack(spacing: 12) {
+            VStack(spacing: 14) {
 
-                Text("편집")
+                Text("직급 변경")
                     .font(.system(size: 18, weight: .bold))
                     .padding(.top, 6)
 
-                VStack(spacing: 8) {
+                // ✅ 사각형 1개 안에 2개 버튼 + 구분선
+                VStack(spacing: 0) {
+                    roleRow(.manager)
 
-                    dropdownHeader()
+                    Divider()
+                        .background(Color.black.opacity(0.08))
+                        .padding(.horizontal, 12)
 
-                    if isDropdownOpen {
-                        dropdownOptions()
-                    }
-
-                    HStack {
-                        Spacer()
-                        Button {
-                            showDeleteConfirm = true
-                        } label: {
-                            Text("프로필 삭제")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(.red)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                    .padding(.top, 2)
+                    roleRow(.staff)
                 }
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color(red: 0.95, green: 0.95, blue: 0.95)) // ✅ 내부: 회색
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(Color.black.opacity(0.06), lineWidth: 1)
+                )
+                .padding(.top, 6)
 
                 Spacer()
-
-                Button {
-                    var updated = member
-                    updated.role = tempRole
-                    onSave(updated)
-                } label: {
-                    Text("완료")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity, minHeight: 50)
-                        .background(
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .fill(Color.black)
-                        )
-                }
-                .buttonStyle(.plain)
-
-                Button {
-                    onClose()
-                } label: {
-                    Text("닫기")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(.black)
-                        .frame(maxWidth: .infinity, minHeight: 50)
-                        .background(
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .fill(Color.white)
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .stroke(Color(red: 0.53, green: 0.53, blue: 0.53), lineWidth: 1)
-                        )
-                }
-                .buttonStyle(.plain)
             }
             .padding(24)
-
-            if showDeleteConfirm {
-                deleteConfirmOverlay()
-            }
         }
-        .onAppear {
-            tempRole = member.role
+
+        // ✅ 핵심: 시트 위에 또 하나의 "전체화면 레이어"로 경고창 올리기
+        // → 그래서 모달 닫지 않아도 경고창 터치 가능
+        .fullScreenCover(isPresented: $showChangeConfirm) {
+            changeConfirmOverlayFullScreen()
+                .presentationBackground(.clear) // iOS 16+
         }
     }
 
-    private func dropdownHeader() -> some View {
-        Button {
-            withAnimation(.easeInOut(duration: 0.15)) {
-                isDropdownOpen.toggle()
-            }
+    // ===============================
+    //  액션 로직
+    // ===============================
+
+    // 같은 직급이면 무시(모달 유지)
+    // 다른 직급이면 경고창 열기
+    private func requestRoleChange(_ role: StaffMember.Role) {
+        guard member.role != role else { return }
+        pendingRole = role
+        showChangeConfirm = true
+    }
+
+    private func confirmRoleChange() {
+        guard let role = pendingRole else { return }
+
+        var updated = member
+        updated.role = role
+        onSave(updated)     // ✅ 반영
+        showChangeConfirm = false
+        pendingRole = nil
+        onClose()           // ✅ 모달 닫기
+    }
+
+    private func cancelRoleChange() {
+        showChangeConfirm = false
+        pendingRole = nil
+        // ✅ 모달은 유지
+    }
+
+    // ===============================
+    //  UI 컴포넌트
+    // ===============================
+
+    private func roleRow(_ role: StaffMember.Role) -> some View {
+        let isSelected = (member.role == role)
+
+        return Button {
+            requestRoleChange(role)
         } label: {
             HStack {
-                Text(tempRole.rawValue)
+                Text(role.rawValue)
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(.black)
 
                 Spacer()
 
-                Image(systemName: isDropdownOpen ? "chevron.up" : "chevron.down")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.gray)
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(.black)
+                }
             }
             .padding(.horizontal, 14)
-            .frame(height: 50)
-            .background(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color.white)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .stroke(Color(red: 0.71, green: 0.71, blue: 0.71), lineWidth: 1)
-                    )
-            )
+            .frame(height: 52)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
 
-    private func dropdownOptions() -> some View {
-        VStack(spacing: 0) {
-            ForEach(StaffMember.Role.allCases) { r in
-                Button {
-                    tempRole = r
-                    withAnimation(.easeInOut(duration: 0.15)) {
-                        isDropdownOpen = false
-                    }
-                } label: {
-                    HStack {
-                        Text(r.rawValue)
-                            .font(.system(size: 16))
-                            .foregroundStyle(.black)
-                        Spacer()
-                    }
-                    .padding(.horizontal, 14)
-                    .frame(height: 48)
-                    .background(Color.white)
-                }
-                .buttonStyle(.plain)
-
-                if r != StaffMember.Role.allCases.last {
-                    Rectangle()
-                        .fill(Color(red: 0.87, green: 0.87, blue: 0.87))
-                        .frame(height: 1)
-                        .padding(.horizontal, 10)
-                }
-            }
-        }
-        .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Color.white)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .stroke(Color(red: 0.71, green: 0.71, blue: 0.71), lineWidth: 1)
-                )
-        )
-    }
-
-    private func deleteConfirmOverlay() -> some View {
+    // ✅ “화면 전체”에서 중앙에 뜨는 커스텀 경고창 (모달 위에서 동작)
+    private func changeConfirmOverlayFullScreen() -> some View {
         ZStack {
+            // 딤 처리 (전체 화면)
             Color.black.opacity(0.25)
                 .ignoresSafeArea()
+                .onTapGesture { } // 바깥 탭 무시
 
+            // ✅ 팝업: 화면 정중앙
             VStack(spacing: 12) {
-                Image(systemName: "exclamationmark.circle.fill")
-                    .font(.system(size: 46, weight: .bold))
-                    .foregroundStyle(.gray)
+                Image("느낌표")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 32, height: 96) // ✅ 요청한 크기
 
-                Text("프로필을 삭제하시겠습니까!?")
+                Text("직급을 변경하시겠습니까?")
                     .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(.black)
 
                 HStack(spacing: 10) {
                     Button {
-                        showDeleteConfirm = false
+                        cancelRoleChange()
                     } label: {
                         Text("취소")
                             .font(.system(size: 15, weight: .semibold))
@@ -197,16 +154,15 @@ struct StaffEditModal: View {
                     .buttonStyle(.plain)
 
                     Button {
-                        showDeleteConfirm = false
-                        onDelete(member)
+                        confirmRoleChange()
                     } label: {
-                        Text("삭제")
+                        Text("변경")
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity, minHeight: 40)
                             .background(
                                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .fill(Color.red)
+                                    .fill(Color.black)
                             )
                     }
                     .buttonStyle(.plain)
@@ -221,18 +177,4 @@ struct StaffEditModal: View {
             )
         }
     }
-}
-
-#Preview {
-    // ✅ 너 프로젝트에 StaffStore/StaffMember가 이미 있으면
-    // 이 Preview 부분만 너 데이터로 맞춰서 쓰면 됨.
-    let previewStore = StaffStore()
-    previewStore.members = [
-        StaffMember(name: "이지수", startDateText: "2010.12.25~", role: .manager),
-        StaffMember(name: "김하늘", startDateText: "2022.03.01~", role: .manager),
-        StaffMember(name: "박성준", startDateText: "2024.09.10~", role: .staff),
-        StaffMember(name: "홍길동", startDateText: "2023.01.15~", role: .staff),
-        StaffMember(name: "최예린", startDateText: "2025.06.07~", role: .staff),
-    ]
-    return StaffList_View(store: previewStore)
 }

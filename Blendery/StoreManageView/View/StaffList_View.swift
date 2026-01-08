@@ -1,7 +1,7 @@
-// ===============================
+//
 //  StaffList_View.swift
 //  Blendery
-// ===============================
+//
 
 import SwiftUI
 import UIKit
@@ -13,16 +13,39 @@ import Combine
 
 struct StaffList_View: View {
 
-    // 상태/데이터 변수
+    // ===============================
+    //  상태 변수 - 토스트
+    // ===============================
+
+    @State private var showToast: Bool = false
+    @State private var toastMessage: String = ""
+
+    // ===============================
+    //  상태/데이터 변수
+    // ===============================
+
     @StateObject private var store: StaffStore
     init(store: StaffStore = StaffStore()) {
         _store = StateObject(wrappedValue: store)
     }
 
-    // 모달/팝업 트리거
     @State private var showAddModal: Bool = false
     @State private var roleEditTarget: StaffMember? = nil
     @State private var deleteTarget: StaffMember? = nil
+
+    // ===============================
+    //  리스트 화면 기준 “중앙 경고창” 상태
+    // ===============================
+
+    private enum ConfirmMode {
+        case roleChange
+        case delete
+    }
+
+    @State private var showConfirm: Bool = false
+    @State private var confirmMode: ConfirmMode = .delete
+    @State private var roleChangeTarget: StaffMember? = nil
+    @State private var pendingRole: StaffMember.Role? = nil
 
     var body: some View {
         NavigationStack {
@@ -34,22 +57,10 @@ struct StaffList_View: View {
                     VStack(spacing: 18) {
 
                         sectionTitle("매니저")
-
-                        cardContainer {
-                            memberList(
-                                members: store.managers,
-                                onTapEdit: { roleEditTarget = $0 } // ✅ row 탭 → 편집 모달
-                            )
-                        }
+                        cardContainer { memberList(members: store.managers) }
 
                         sectionTitle("스태프")
-
-                        cardContainer {
-                            memberList(
-                                members: store.staffs,
-                                onTapEdit: { roleEditTarget = $0 } // ✅ row 탭 → 편집 모달
-                            )
-                        }
+                        cardContainer { memberList(members: store.staffs) }
 
                         HStack {
                             Spacer()
@@ -69,69 +80,56 @@ struct StaffList_View: View {
                     .padding(.top, 12)
                     .padding(.bottom, 30)
                 }
+
+                // ✅ 토스트 (리스트 화면 위에 떠야 함)
+                if showToast {
+                    toastView(text: toastMessage)
+                        .zIndex(999)
+                }
             }
             .navigationTitle("직원 관리")
             .navigationBarTitleDisplayMode(.inline)
         }
 
-        // ✅ 편집 모달 (수정 아이콘/row탭 공통)
+        // ✅ 직급 변경 모달(편집 모달)
         .sheet(item: $roleEditTarget) { member in
             StaffEditModal(
                 member: member,
-                onSave: {
-                    store.update($0)
-                    roleEditTarget = nil
-                },
-                onDelete: {
-                    store.delete($0)
-                    roleEditTarget = nil
+                onSave: { updated in
+                    store.update(updated)
                 },
                 onClose: {
                     roleEditTarget = nil
                 }
             )
-            .presentationDetents([.fraction(0.7)])
+            .presentationDetents([.fraction(0.35)])
         }
 
         // ✅ 추가 모달
         .sheet(isPresented: $showAddModal) {
             StaffAddModal(
-                onAdd: { name, date, role in
-                    store.add(name: name, startDateText: date, role: role)
-                    showAddModal = false
+                onSend: { _ in
+                    // ✅ 발송 UI만: 모달 닫히고 리스트에서 토스트
+                    showToastMessage("발송 완료")
                 },
-                onClose: { showAddModal = false }
+                onClose: {
+                    showAddModal = false
+                }
             )
-            .presentationDetents([.fraction(0.7)])
+            .presentationDetents([.fraction(0.45)])
         }
 
-        // ✅ 삭제 확인 alert (삭제 아이콘 전용)
-        .alert(
-            "프로필을 삭제하시겠습니까!?",
-            isPresented: Binding(
-                get: { deleteTarget != nil },
-                set: { if !$0 { deleteTarget = nil } }
-            )
-        ) {
-            Button("취소", role: .cancel) {
-                deleteTarget = nil
-            }
-            Button("삭제", role: .destructive) {
-                if let target = deleteTarget {
-                    store.delete(target)
-                }
-                deleteTarget = nil
-            }
-        } message: {
-            Text("삭제하면 되돌릴 수 없습니다.")
+        // ✅ 리스트 화면 기준 “중앙 경고창”
+        .fullScreenCover(isPresented: $showConfirm) {
+            confirmOverlayFullScreen()
+                .presentationBackground(.clear)
         }
     }
 }
 
-// MARK: - UI 컴포넌트(내부)
+// MARK: - 리스트 UI 컴포넌트
 private extension StaffList_View {
 
-    // 레이아웃 상수
     var sidePadding: CGFloat { 18 }
     var cardRadius: CGFloat { 20 }
     var rowVPadding: CGFloat { 14 }
@@ -160,11 +158,7 @@ private extension StaffList_View {
             .padding(.horizontal, sidePadding)
     }
 
-    func memberList(
-        members: [StaffMember],
-        onTapEdit: @escaping (StaffMember) -> Void
-    ) -> some View {
-
+    func memberList(members: [StaffMember]) -> some View {
         VStack(spacing: 0) {
 
             if members.isEmpty {
@@ -177,7 +171,6 @@ private extension StaffList_View {
 
             } else {
                 ForEach(Array(members.enumerated()), id: \.element.id) { idx, member in
-
                     HStack(spacing: 12) {
 
                         profileImage()
@@ -185,7 +178,6 @@ private extension StaffList_View {
                             .opacity(0.95)
 
                         VStack(alignment: .leading, spacing: 5) {
-
                             HStack(spacing: 6) {
                                 Text(member.name)
                                     .font(.system(size: 16, weight: .semibold))
@@ -202,10 +194,7 @@ private extension StaffList_View {
                         Spacer()
 
                         HStack(spacing: 10) {
-                            // ✅ 수정 아이콘 → 편집 모달
-                            Button {
-                                roleEditTarget = member
-                            } label: {
+                            Button { roleEditTarget = member } label: {
                                 Image("직원수정")
                                     .resizable()
                                     .scaledToFit()
@@ -213,10 +202,7 @@ private extension StaffList_View {
                             }
                             .buttonStyle(.plain)
 
-                            // ✅ 삭제 아이콘 → 삭제 alert
-                            Button {
-                                deleteTarget = member
-                            } label: {
+                            Button { requestDeleteConfirm(member: member) } label: {
                                 Image("직원삭제")
                                     .resizable()
                                     .scaledToFit()
@@ -225,10 +211,6 @@ private extension StaffList_View {
                             .buttonStyle(.plain)
                         }
                     }
-                    // ✅ row 탭도 편집 모달로
-                    .contentShape(Rectangle())
-                    .onTapGesture { onTapEdit(member) }
-
                     .padding(.horizontal, 18)
                     .padding(.vertical, rowVPadding)
 
@@ -270,6 +252,161 @@ private extension StaffList_View {
     }
 }
 
+// MARK: - 리스트 화면 경고창 로직 + 토스트
+private extension StaffList_View {
+
+    func requestRoleChangeConfirm(member: StaffMember, newRole: StaffMember.Role) {
+        guard member.role != newRole else { return }
+
+        confirmMode = .roleChange
+        roleChangeTarget = member
+        pendingRole = newRole
+        showConfirm = true
+    }
+
+    func requestDeleteConfirm(member: StaffMember) {
+        confirmMode = .delete
+        deleteTarget = member
+        showConfirm = true
+    }
+
+    func cancelConfirm() {
+        showConfirm = false
+        roleChangeTarget = nil
+        pendingRole = nil
+        deleteTarget = nil
+    }
+
+    func confirmAction() {
+        switch confirmMode {
+
+        case .roleChange:
+            guard let target = roleChangeTarget,
+                  let newRole = pendingRole else {
+                cancelConfirm()
+                return
+            }
+
+            var updated = target
+            updated.role = newRole
+            store.update(updated)
+
+            roleEditTarget = nil
+            cancelConfirm()
+
+        case .delete:
+            guard let target = deleteTarget else {
+                cancelConfirm()
+                return
+            }
+
+            store.delete(target)
+            cancelConfirm()
+        }
+    }
+
+    func confirmOverlayFullScreen() -> some View {
+        ZStack {
+            Color.black.opacity(0.25)
+                .ignoresSafeArea()
+                .onTapGesture { }
+
+            VStack(spacing: 12) {
+
+                Image("느낌표")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 32, height: 96)
+
+                Text(confirmMode == .delete ? "프로필을 삭제하시겠습니까!?" : "직급을 변경하시겠습니까?")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(.black)
+
+                if confirmMode == .delete {
+                    Text("삭제하면 되돌릴 수 없습니다.")
+                        .font(.system(size: 13, weight: .regular))
+                        .foregroundStyle(.gray)
+                        .padding(.top, -2)
+                }
+
+                HStack(spacing: 10) {
+                    Button { cancelConfirm() } label: {
+                        Text("취소")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.black)
+                            .frame(maxWidth: .infinity, minHeight: 40)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .fill(Color(red: 0.92, green: 0.92, blue: 0.92))
+                            )
+                    }
+                    .buttonStyle(.plain)
+
+                    Button { confirmAction() } label: {
+                        Text(confirmMode == .delete ? "삭제" : "변경")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity, minHeight: 40)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .fill(confirmMode == .delete ? Color.red : Color.black)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.top, 6)
+            }
+            .padding(18)
+            .frame(maxWidth: 290)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Color.white)
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        }
+    }
+
+    // ===============================
+    //  ✅ 토스트 메시지 (여기 안에 있어야 @State 접근 가능)
+    // ===============================
+
+    func showToastMessage(_ text: String) {
+        toastMessage = text
+        withAnimation(.easeInOut(duration: 0.15)) {
+            showToast = true
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+            withAnimation(.easeInOut(duration: 0.15)) {
+                showToast = false
+            }
+        }
+    }
+
+    func toastView(text: String) -> some View {
+        VStack {
+            Spacer()
+
+            Text(text)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color.black.opacity(0.85))
+                )
+                .padding(.bottom, 18)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .allowsHitTesting(false)
+    }
+}
+
+// ===============================
+//  Preview
+// ===============================
+
 #Preview {
     let previewStore = StaffStore()
     previewStore.members = [
@@ -279,6 +416,5 @@ private extension StaffList_View {
         StaffMember(name: "홍길동", startDateText: "2023.01.15~", role: .staff),
         StaffMember(name: "최예린", startDateText: "2025.06.07~", role: .staff),
     ]
-
     return StaffList_View(store: previewStore)
 }

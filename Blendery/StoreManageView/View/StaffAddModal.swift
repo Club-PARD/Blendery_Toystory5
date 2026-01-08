@@ -1,6 +1,7 @@
 // ===============================
 //  StaffAddModal.swift
 //  Blendery
+//  (사진 UI 버전 + 발송 누르면 닫히기)
 // ===============================
 
 import SwiftUI
@@ -9,130 +10,132 @@ import UIKit
 
 struct StaffAddModal: View {
 
+    // ===============================
     //  상태 변수
-    //  - 입력값
-    @State private var nameText: String = ""
-    @State private var dateText: String = "2010.12.25~"
-    @State private var role: StaffMember.Role = .staff
+    // ===============================
 
+    // - 이메일 입력값
+    @State private var emailText: String = ""
+
+    // ===============================
     //  콜백
-    let onAdd: (String, String, StaffMember.Role) -> Void
+    // ===============================
+
+    // - 발송(실제 발송 X, 리스트로 돌아가게 + 토스트 띄우는 트리거만)
+    let onSend: (String) -> Void
+
+    // - 모달 닫기
     let onClose: () -> Void
+
+    // ===============================
+    //  UI
+    // ===============================
 
     var body: some View {
         ZStack {
             Color(red: 0.97, green: 0.97, blue: 0.97)
                 .ignoresSafeArea()
 
-            VStack(spacing: 12) {
-                Text("추가")
-                    .font(.system(size: 18, weight: .bold))
-                    .padding(.top, 6)
+            VStack(spacing: 14) {
 
-                // 이름 입력
-                inputField(title: "이름", text: $nameText, placeholder: "이름 입력")
+                Text("직원 추가")
+                    .font(.system(size: 20, weight: .bold))
+                    .padding(.top, 10)
 
-                // 날짜(일단 텍스트)
-                inputField(title: "시작일", text: $dateText, placeholder: "예: 2010.12.25~")
+                // ✅ 사진처럼: 큰 회색 입력 박스 1개
+                emailField()
 
-                // 역할 선택(간단 Picker)
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("직책")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(.gray)
+                // ✅ 발송 버튼 (검은 배경 + 흰 글씨)
+                sendButton()
 
-                    Picker("", selection: $role) {
-                        ForEach(StaffMember.Role.allCases) { r in
-                            Text(r.rawValue).tag(r)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                }
+                // ✅ 닫기 버튼 (흰 배경 + 검은 글씨)
+                closeButton()
 
                 Spacer()
-
-                Button {
-                    let trimmed = nameText.trimmingCharacters(in: .whitespacesAndNewlines)
-                    guard !trimmed.isEmpty else { return }
-                    onAdd(trimmed, dateText, role)
-                } label: {
-                    Text("완료")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity, minHeight: 50)
-                        .background(
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .fill(Color.black)
-                        )
-                }
-                .buttonStyle(.plain)
-
-                Button {
-                    onClose()
-                } label: {
-                    Text("닫기")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(.black)
-                        .frame(maxWidth: .infinity, minHeight: 50)
-                        .background(
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .fill(Color.white)
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .stroke(Color(red: 0.53, green: 0.53, blue: 0.53), lineWidth: 1)
-                        )
-                }
-                .buttonStyle(.plain)
             }
-            .padding(24)
+            .padding(.horizontal, 18)
+            .padding(.top, 6)
         }
+        .ignoresSafeArea(.keyboard, edges: .bottom)
     }
 
-    private func inputField(
-        title: String,
-        text: Binding<String>,
-        placeholder: String
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.gray)
+    // ===============================
+    //  UI 컴포넌트
+    // ===============================
 
+    private func emailField() -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color(red: 0.95, green: 0.95, blue: 0.95))
+
+            TextField(
+                "",
+                text: $emailText,
+                prompt: Text("000000@gmail.com")
+                    .foregroundStyle(Color.gray.opacity(0.75))  // ✅ placeholder 회색
+                    .font(.system(size: 18, weight: .regular))   // ✅ 글자 크기 살짝 줄임
+            )
+            .textInputAutocapitalization(.never)
+            .keyboardType(.emailAddress)
+            .autocorrectionDisabled(true)
+            .font(.system(size: 18, weight: .regular))         // ✅ 입력 글자도 살짝 줄임
+            .foregroundStyle(.black)
+            .padding(.horizontal, 18)
+            .frame(height: 64)
+        }
+        .frame(height: 64)
+    }
+
+    private func sendButton() -> some View {
+        Button {
+            let trimmed = emailText.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { return }
+
+            // ✅ “발송” 눌렀을 때:
+            // 1) 리스트 쪽에 토스트 띄우라고 알려주고
+            // 2) 모달 닫기
+            onSend(trimmed)
+            onClose()
+
+        } label: {
             ZStack {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Color.black)
+
+                Text("초대메일 발송하기")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(.white)
+            }
+            .frame(height: 64)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func closeButton() -> some View {
+        Button {
+            onClose()
+        } label: {
+            ZStack {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(Color.white)
-                    .frame(height: 50)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .stroke(Color(red: 0.71, green: 0.71, blue: 0.71), lineWidth: 1)
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .stroke(Color.black.opacity(0.08), lineWidth: 1)
                     )
 
-                HStack(spacing: 10) {
-                    TextField(placeholder, text: text)
-                        .font(.system(size: 16))
-                        .frame(height: 50)
-                        .padding(.leading, 15)
-
-                    Spacer()
-
-                    if !text.wrappedValue.isEmpty {
-                        Button {
-                            text.wrappedValue = ""
-                        } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .font(.system(size: 18))
-                                .foregroundStyle(.gray)
-                        }
-                        .padding(.trailing, 20)
-                        .buttonStyle(.plain)
-                    }
-                }
+                Text("닫기")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(.black)
             }
+            .frame(height: 64)
         }
+        .buttonStyle(.plain)
     }
 }
 
 #Preview {
-    StaffAddModal(onAdd: { _,_,_ in }, onClose: {})
+    StaffAddModal(
+        onSend: { _ in },
+        onClose: {}
+    )
 }
