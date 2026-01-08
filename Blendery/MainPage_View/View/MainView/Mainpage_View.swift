@@ -77,6 +77,19 @@ struct Mainpage_View: View {
     
     @State private var showSearchSheet = false
     
+    private var searchedMenus: [MenuCardModel] {
+            let q = searchVM.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            let base = vm.cards
+
+            if q.isEmpty { return base }
+
+            return base.filter {
+                $0.title.localizedCaseInsensitiveContains(q) ||
+                $0.subtitle.localizedCaseInsensitiveContains(q) ||
+                $0.lines.joined(separator: " ").localizedCaseInsensitiveContains(q)
+            }
+        }
+    
     var body: some View {
         ZStack {
             Color(red: 0.97, green: 0.97, blue: 0.97)
@@ -154,7 +167,17 @@ struct Mainpage_View: View {
             // 검색 오버레이 표시 조건
             // 뷰 상태 기반
             // 서버와 무관
-            
+            if searchVM.isFocused {
+                Mainpage_SearchOverlayView(
+                    searchVM: searchVM,
+                    focus: $isSearchFieldFocused,
+                    onSelect: { recipeId in
+                        selectedRecipe = RecipeNavID(id: recipeId)
+                    }
+                )
+                .transition(.opacity)
+                .zIndex(80)
+            }
             
             // 스토어 선택 모달 표시 조건
             // 뷰 상태 기반
@@ -202,11 +225,11 @@ struct Mainpage_View: View {
         }
         .navigationBarBackButtonHidden(true)
         
-        .onChange(of: searchVM.text) { _ in
-            Task {
-                await searchVM.search()
-            }
-        }
+//        .onChange(of: searchVM.text) { _ in
+//            Task {
+//                await searchVM.search()
+//            }
+//        }
         
         
         // 네비게이션 처리

@@ -126,6 +126,18 @@ struct DetailRecipeView: View {
         .onChange(of: isSearchFieldFocused) { newValue in
             if searchVM.isFocused != newValue { searchVM.isFocused = newValue }
         }
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    UIApplication.shared.popToRoot(animated: true)
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(.black)
+                }
+            }
+        }
     }
 }
 

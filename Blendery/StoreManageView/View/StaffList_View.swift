@@ -5,27 +5,25 @@
 
 import SwiftUI
 import UIKit
+import Combine
+
+// ===============================
+//  StaffList_View.swift
+// ===============================
 
 struct StaffList_View: View {
-    
-    //  상태/데이터 변수
-    //  - UI만 먼저 만들기용(메모리 저장)
-    @StateObject private var store = StaffStore()
-    
-    //  상태 변수
-    //  - 편집할 멤버(선택된 멤버)
-    @State private var selectedMember: StaffMember? = nil
-    
-    //  상태 변수
-    //  - 추가 모달 표시
+
+    // 상태/데이터 변수
+    @StateObject private var store: StaffStore
+    init(store: StaffStore = StaffStore()) {
+        _store = StateObject(wrappedValue: store)
+    }
+
+    // 모달/팝업 트리거
     @State private var showAddModal: Bool = false
-    
     @State private var roleEditTarget: StaffMember? = nil
     @State private var deleteTarget: StaffMember? = nil
 
-    
-    @Environment(\.dismiss) private var dismiss
-    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -36,25 +34,23 @@ struct StaffList_View: View {
                     VStack(spacing: 18) {
 
                         sectionTitle("매니저")
-                            .font(.system(size: 17, weight: .medium))
 
                         cardContainer {
                             memberList(
                                 members: store.managers,
-                                onTapEdit: { selectedMember = $0 }
+                                onTapEdit: { roleEditTarget = $0 } // ✅ row 탭 → 편집 모달
                             )
                         }
 
                         sectionTitle("스태프")
-                            .font(.system(size: 17, weight: .medium))
 
                         cardContainer {
                             memberList(
                                 members: store.staffs,
-                                onTapEdit: { selectedMember = $0 }
+                                onTapEdit: { roleEditTarget = $0 } // ✅ row 탭 → 편집 모달
                             )
                         }
-                        
+
                         HStack {
                             Spacer()
 
@@ -77,23 +73,27 @@ struct StaffList_View: View {
             .navigationTitle("직원 관리")
             .navigationBarTitleDisplayMode(.inline)
         }
-        .sheet(item: $selectedMember) { member in
+
+        // ✅ 편집 모달 (수정 아이콘/row탭 공통)
+        .sheet(item: $roleEditTarget) { member in
             StaffEditModal(
                 member: member,
                 onSave: {
                     store.update($0)
-                    selectedMember = nil
+                    roleEditTarget = nil
                 },
                 onDelete: {
                     store.delete($0)
-                    selectedMember = nil
+                    roleEditTarget = nil
                 },
                 onClose: {
-                    selectedMember = nil
+                    roleEditTarget = nil
                 }
             )
             .presentationDetents([.fraction(0.7)])
         }
+
+        // ✅ 추가 모달
         .sheet(isPresented: $showAddModal) {
             StaffAddModal(
                 onAdd: { name, date, role in
@@ -104,20 +104,38 @@ struct StaffList_View: View {
             )
             .presentationDetents([.fraction(0.7)])
         }
+
+        // ✅ 삭제 확인 alert (삭제 아이콘 전용)
+        .alert(
+            "프로필을 삭제하시겠습니까!?",
+            isPresented: Binding(
+                get: { deleteTarget != nil },
+                set: { if !$0 { deleteTarget = nil } }
+            )
+        ) {
+            Button("취소", role: .cancel) {
+                deleteTarget = nil
+            }
+            Button("삭제", role: .destructive) {
+                if let target = deleteTarget {
+                    store.delete(target)
+                }
+                deleteTarget = nil
+            }
+        } message: {
+            Text("삭제하면 되돌릴 수 없습니다.")
+        }
     }
 }
 
-
 // MARK: - UI 컴포넌트(내부)
-
 private extension StaffList_View {
-    
-    // [레이아웃 상수]
-    // - 사진 느낌 맞추기용
+
+    // 레이아웃 상수
     var sidePadding: CGFloat { 18 }
     var cardRadius: CGFloat { 20 }
     var rowVPadding: CGFloat { 14 }
-    
+
     func sectionTitle(_ title: String) -> some View {
         Text(title)
             .font(.system(size: 17, weight: .bold))
@@ -126,7 +144,7 @@ private extension StaffList_View {
             .padding(.leading, sidePadding + 6)
             .padding(.top, title == "매니저" ? 6 : 2)
     }
-    
+
     func cardContainer(@ViewBuilder content: () -> some View) -> some View {
         content()
             .background(
@@ -142,14 +160,13 @@ private extension StaffList_View {
             .padding(.horizontal, sidePadding)
     }
 
-    
     func memberList(
         members: [StaffMember],
         onTapEdit: @escaping (StaffMember) -> Void
     ) -> some View {
-        
+
         VStack(spacing: 0) {
-            
+
             if members.isEmpty {
                 Text("등록된 프로필이 없습니다.")
                     .font(.system(size: 14))
@@ -157,57 +174,64 @@ private extension StaffList_View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 18)
                     .padding(.vertical, 14)
+
             } else {
                 ForEach(Array(members.enumerated()), id: \.element.id) { idx, member in
-                    
+
                     HStack(spacing: 12) {
-                        
+
                         profileImage()
                             .frame(width: 46, height: 46)
                             .opacity(0.95)
-                        
+
                         VStack(alignment: .leading, spacing: 5) {
-                            
+
                             HStack(spacing: 6) {
                                 Text(member.name)
                                     .font(.system(size: 16, weight: .semibold))
                                     .foregroundStyle(.black)
-                                
+
                                 roleBadge(member.role.rawValue)
                             }
-                            
+
                             Text(member.startDateText)
                                 .font(.system(size: 12, weight: .regular))
                                 .foregroundStyle(Color.gray.opacity(0.85))
                         }
-                        
+
                         Spacer()
-                        
+
                         HStack(spacing: 10) {
+                            // ✅ 수정 아이콘 → 편집 모달
                             Button {
                                 roleEditTarget = member
                             } label: {
                                 Image("직원수정")
-                                    .font(.system(size: 17))
-                                    .foregroundStyle(.gray)
+                                    .resizable()
+                                    .scaledToFit()
                                     .frame(width: 30, height: 30)
                             }
                             .buttonStyle(.plain)
 
+                            // ✅ 삭제 아이콘 → 삭제 alert
                             Button {
                                 deleteTarget = member
                             } label: {
                                 Image("직원삭제")
-                                    .font(.system(size: 17))
-                                    .foregroundStyle(.gray)
+                                    .resizable()
+                                    .scaledToFit()
                                     .frame(width: 30, height: 30)
                             }
                             .buttonStyle(.plain)
                         }
                     }
+                    // ✅ row 탭도 편집 모달로
+                    .contentShape(Rectangle())
+                    .onTapGesture { onTapEdit(member) }
+
                     .padding(.horizontal, 18)
                     .padding(.vertical, rowVPadding)
-                    
+
                     if idx != members.count - 1 {
                         Rectangle()
                             .fill(Color(red: 0.86, green: 0.86, blue: 0.86))
@@ -218,7 +242,7 @@ private extension StaffList_View {
             }
         }
     }
-    
+
     func roleBadge(_ text: String) -> some View {
         Text(text)
             .font(.system(size: 11, weight: .semibold))
@@ -234,31 +258,27 @@ private extension StaffList_View {
                     )
             )
     }
-    
+
     func profileImage() -> some View {
         let img = UIImage(named: "직원관리프로필")
         ?? UIImage(systemName: "person.crop.circle.fill")!
-        
+
         return Image(uiImage: img)
             .resizable()
             .scaledToFit()
             .foregroundStyle(.gray)
     }
-    
-    func editIcon() -> some View {
-        if UIImage(named: "수정 아이콘") != nil {
-            return AnyView(
-                Image("수정 아이콘")
-                    .resizable()
-                    .scaledToFit()
-                    .foregroundStyle(.gray)
-            )
-        } else {
-            return AnyView(
-                Image(systemName: "square.and.pencil")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(.gray)
-            )
-        }
-    }
+}
+
+#Preview {
+    let previewStore = StaffStore()
+    previewStore.members = [
+        StaffMember(name: "이지수", startDateText: "2010.12.25~", role: .manager),
+        StaffMember(name: "김하늘", startDateText: "2022.03.01~", role: .manager),
+        StaffMember(name: "박성준", startDateText: "2024.09.10~", role: .staff),
+        StaffMember(name: "홍길동", startDateText: "2023.01.15~", role: .staff),
+        StaffMember(name: "최예린", startDateText: "2025.06.07~", role: .staff),
+    ]
+
+    return StaffList_View(store: previewStore)
 }

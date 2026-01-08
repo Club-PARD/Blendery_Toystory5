@@ -1,30 +1,21 @@
 // ===============================
 //  StaffEditModal.swift
-//  Blendery
 // ===============================
 
 import SwiftUI
+import Combine
+import UIKit
 
 struct StaffEditModal: View {
 
-    //  입력(편집 대상)
     let member: StaffMember
 
-    //  콜백
     let onSave: (StaffMember) -> Void
     let onDelete: (StaffMember) -> Void
     let onClose: () -> Void
 
-    //  상태 변수
-    //  - 드롭다운 열림/닫힘
     @State private var isDropdownOpen: Bool = false
-
-    //  상태 변수
-    //  - 임시 편집 값(저장 전)
     @State private var tempRole: StaffMember.Role = .staff
-
-    //  상태 변수
-    //  - 삭제 확인 팝업
     @State private var showDeleteConfirm: Bool = false
 
     var body: some View {
@@ -181,7 +172,6 @@ struct StaffEditModal: View {
         ZStack {
             Color.black.opacity(0.25)
                 .ignoresSafeArea()
-                .onTapGesture { }
 
             VStack(spacing: 12) {
                 Image(systemName: "exclamationmark.circle.fill")
@@ -234,10 +224,15 @@ struct StaffEditModal: View {
 }
 
 #Preview {
-    StaffEditModal(
-        member: StaffMember(name: "이지수", startDateText: "2010.12.25~", role: .manager),
-        onSave: { _ in },
-        onDelete: { _ in },
-        onClose: {}
-    )
+    // ✅ 너 프로젝트에 StaffStore/StaffMember가 이미 있으면
+    // 이 Preview 부분만 너 데이터로 맞춰서 쓰면 됨.
+    let previewStore = StaffStore()
+    previewStore.members = [
+        StaffMember(name: "이지수", startDateText: "2010.12.25~", role: .manager),
+        StaffMember(name: "김하늘", startDateText: "2022.03.01~", role: .manager),
+        StaffMember(name: "박성준", startDateText: "2024.09.10~", role: .staff),
+        StaffMember(name: "홍길동", startDateText: "2023.01.15~", role: .staff),
+        StaffMember(name: "최예린", startDateText: "2025.06.07~", role: .staff),
+    ]
+    return StaffList_View(store: previewStore)
 }
