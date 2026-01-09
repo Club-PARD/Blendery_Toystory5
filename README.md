@@ -1,15 +1,14 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Club-PARD/Blendery_FE/1804c63cc29764714d0e3ff8b20cc6de65e88c57/Blendery/Assets.xcassets/%EA%B0%80%EB%A1%9C.imageset/%EA%B0%80%EB%A1%9C.svg" alt="Blendery Logo" width="180"/>
+  <img src="https://raw.githubusercontent.com/Club-PARD/Blendery_FE/1804c63cc29764714d0e3ff8b20cc6de65e88c57/Blendery/Assets.xcassets/%EA%B0%80%EB%A1%9C.imageset/%EA%B0%80%EB%A1%9C.svg" alt="Blendery Logo" width="400"/>
 </p>
 
-<h1 align="center">Blendery</h1>
+<h1>Blendery</h1>
 
-<p align="center">
-  ☕️ 초성 검색 · ⭐️ 즐겨찾기 · 👥 직원 관리<br/>
-  <b>실제 카페 현장을 위한 레시피 관리 iOS 앱</b>
+<p>
+  <b>음료 제조의 레시피 탐색과정을 줄이기 위한 카페 레시피 퀵서치 서비스</b>
 </p>
 
-Blendery는 카페 직원들이  
+Blendery는 카페 직원들이
 ✔️ 바쁜 근무 중에도  
 ✔️ 복잡한 메뉴를 빠르게 찾음으로써  
 ✔️ 매장을 효율적으로 관리할 수 있도록 만든 iOS 앱입니다.
