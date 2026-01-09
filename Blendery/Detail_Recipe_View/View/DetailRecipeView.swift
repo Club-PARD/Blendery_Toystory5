@@ -7,11 +7,20 @@ import SwiftUI
 import UIKit
 
 struct DetailRecipeView: View {
+    @State private var isBookmarked: Bool
 
     // MARK: - Inputs
     let menu: MenuCardModel
     let allMenus: [MenuCardModel]
     let cafeId: String
+    
+    init(menu: MenuCardModel, allMenus: [MenuCardModel], cafeId: String) {
+        self.menu = menu
+        self.allMenus = allMenus
+        self.cafeId = cafeId
+        _isBookmarked = State(initialValue: menu.isBookmarked)
+    }
+
 
     // MARK: - State
     @State private var selectedTemperature: Temperature = .hot
@@ -57,11 +66,14 @@ struct DetailRecipeView: View {
                     menu: menu,
                     optionTags: optionBadgeTags,
                     thumbnailURL: currentThumbnailURL,
+                    isBookmarked: $isBookmarked,
                     onToggleFavorite: {
-                        // 👉 여기서는 UI 토글만 확인 (서버는 추후 연결)
-                        print("🔖 bookmark tapped")
+                        isBookmarked.toggle()   // ✅ UI 즉시 변경
+                        print("🔖 bookmark toggled:", isBookmarked)
+                        // 👉 다음 단계에서 여기서 서버 연결
                     }
                 )
+
                 .padding(22)
 
                 // 📋 레시피 스텝
