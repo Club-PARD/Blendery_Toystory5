@@ -13,6 +13,7 @@ import UIKit
 
 struct DetailRecipeView: View {
 
+    
     // MARK: - Inputs
     @State private var menu: MenuCardModel
 
