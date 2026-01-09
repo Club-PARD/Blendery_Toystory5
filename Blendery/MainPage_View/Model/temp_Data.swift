@@ -63,3 +63,23 @@ struct MenuCardModel: Identifiable, Hashable {
         self.iceThumbnailUrl = iceThumbnailUrl
     }
 }
+
+//extension MenuCardModel {
+//    static func fromFavorite(_ recipe: RecipeModel) -> MenuCardModel {
+//        let model = MenuCardModel.from(recipe)
+//        return MenuCardModel(
+//            id: model.id,
+//            category: model.category,
+//            tags: model.tags,
+//            title: model.title,
+//            subtitle: model.subtitle,
+//            lines: model.lines,
+//            recipesByOption: model.recipesByOption,
+//            isBookmarked: true,   // ⭐️ 핵심
+//            isImageLoading: false,
+//            imageName: nil,
+//            hotThumbnailUrl: model.hotThumbnailUrl,
+//            iceThumbnailUrl: model.iceThumbnailUrl
+//        )
+//    }
+//}

@@ -11,6 +11,7 @@ struct Mainpage_TopMenu: View {
     let onTapStoreButton: () -> Void
     let onTapProfileButton: () -> Void
     let onTapAdminButton: () -> Void
+    let onTapCategory: (String) -> Void
     
     @Binding var selectedCategory: String
     @ObservedObject var vm: TopMenuViewModel
@@ -73,8 +74,10 @@ struct Mainpage_TopMenu: View {
                             let isSelected = (selectedCategory == category)
                             
                             Button {
+                                
                                 withAnimation(.easeInOut(duration: 0.2)) {
                                     selectedCategory = category
+                                    onTapCategory(category)
                                 }
                             } label: {
                                 Text(category)
@@ -107,8 +110,10 @@ struct Mainpage_TopMenu: View {
                                     let isSelected = (selectedCategory == category)
                                     
                                     Button {
+                                        print("🟡 TopMenu tapped:", category)
                                         withAnimation(.easeInOut(duration: 0.2)) {
                                             selectedCategory = category
+                                            onTapCategory(category)
                                         }
                                     } label: {
                                         Text(category)

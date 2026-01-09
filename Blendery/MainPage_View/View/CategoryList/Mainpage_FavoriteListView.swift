@@ -14,7 +14,6 @@ private struct CardHeightKey: PreferenceKey {
     static var defaultValue: [UUID: CGFloat] = [:]
 
     static func reduce(value: inout [UUID: CGFloat], nextValue: () -> [UUID: CGFloat]) {
-
         // UI 레이아웃 계산 로직
         value.merge(nextValue(), uniquingKeysWith: { $1 })
     }
@@ -22,82 +21,97 @@ private struct CardHeightKey: PreferenceKey {
 
 struct Mainpage_FavoriteListView: View {
 
-    // 서버 연결 ?
-    // 즐겨찾기 목록 조회, 즐겨찾기 토글 같은 로직을 vm이 담당할 가능성이 큼
     @ObservedObject var vm: MainpageViewModel
-
-    // 화면 이동용
-    // 메뉴 선택 시 상세 화면으로 넘기기 위한
     var onSelectMenu: (MenuCardModel) -> Void = { _ in }
 
-    // 카드 높이 측정값 저장
     @State private var measuredHeights: [UUID: CGFloat] = [:]
 
     var body: some View {
 
-        // UI 배치 계산 결과
-        let columns = vm.distributeMasonry(items: vm.favoriteItems, heights: measuredHeights)
+        // ✅ 즐겨찾기 탭에서는 favoriteCards 사용
+        let columns = vm.distributeMasonry(
+            items: vm.favoriteCards,
+            heights: measuredHeights
+        )
 
         ScrollView {
-            HStack(spacing: 17) {
 
-                VStack(spacing: 17) {
-                    ForEach(columns.left) { item in
-                        MenuCardView(
-                            model: item,
+            // ✅ 디버그: 지금 뷰가 보고 있는 favoriteCards 개수
+            Text("DEBUG favorites: \(vm.favoriteCards.count)")
+                .font(.caption)
+                .foregroundColor(.gray)
+                .padding(.top, 8)
 
-                            // 서버?
-                            // 실제 서버 저장은 vm 내부 구현이 담당
-                            onToggleBookmark: { vm.toggleBookmark(id: item.id) },
+            // ⭐️ Empty State 처리 (중요)
+            if vm.favoriteCards.isEmpty {
+                VStack(spacing: 12) {
+                    Text("즐겨찾기한 레시피가 없습니다")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.gray)
 
-                            // 화면 이동용 이벤트
-                            onSelect: { onSelectMenu(item) }
-                        )
-                        .background(
-                            GeometryReader { geo in
-                                // UI 레이아웃 측정값 수집
-                                Color.clear.preference(
-                                    key: CardHeightKey.self,
-                                    value: [item.id: geo.size.height]
-                                )
-                            }
-                        )
+                    Text("하트를 눌러 레시피를 저장해보세요")
+                        .font(.system(size: 13))
+                        .foregroundColor(.gray.opacity(0.8))
+                }
+                .frame(maxWidth: .infinity, minHeight: 300)
+            } else {
+
+                HStack(spacing: 17) {
+
+                    VStack(spacing: 17) {
+                        ForEach(columns.left) { item in
+                            menuCard(item)
+                        }
+                    }
+
+                    VStack(spacing: 17) {
+                        ForEach(columns.right) { item in
+                            menuCard(item)
+                        }
                     }
                 }
-
-                VStack(spacing: 17) {
-                    ForEach(columns.right) { item in
-                        MenuCardView(
-                            model: item,
-
-                            // 서버 호출?
-                            onToggleBookmark: { vm.toggleBookmark(id: item.id) },
-
-                            // 화면 이동용 이벤트
-                            onSelect: { onSelectMenu(item) }
-                        )
-                        .background(
-                            GeometryReader { geo in
-                                // UI 레이아웃 측정값 수집
-                                Color.clear.preference(
-                                    key: CardHeightKey.self,
-                                    value: [item.id: geo.size.height]
-                                )
-                            }
-                        )
-                    }
-                }
+                .padding(.horizontal, 17)
+                .padding(.top, 17)
             }
-            .padding(.horizontal, 17)
-            .padding(.top, 17)
         }
-
-        // UI 상태 업데이트
         .onPreferenceChange(CardHeightKey.self) { new in
-            if new != measuredHeights { measuredHeights = new }
+            if new != measuredHeights {
+                measuredHeights = new
+            }
+        }
+        .onAppear {
+            print("⭐️ FavoriteListView onAppear favorites:", vm.favoriteCards.count)
+
+            let c = vm.distributeMasonry(items: vm.favoriteCards, heights: measuredHeights)
+            print("⭐️ columns left:", c.left.count, "right:", c.right.count)
+        }
+        .onChange(of: vm.favoriteCards) { newValue in
+            print("⭐️ FavoriteCards changed:", newValue.count)
+
+            let c = vm.distributeMasonry(items: newValue, heights: measuredHeights)
+            print("⭐️ columns left:", c.left.count, "right:", c.right.count)
         }
     }
+
+    // MARK: - Card View Builder
+    @ViewBuilder
+    private func menuCard(_ item: MenuCardModel) -> some View {
+        MenuCardView(
+            model: item,
+            onToggleBookmark: { vm.toggleBookmark(id: item.id) },
+            onSelect: { onSelectMenu(item) }
+        )
+        .background(
+            GeometryReader { geo in
+                Color.clear.preference(
+                    key: CardHeightKey.self,
+                    value: [item.id: geo.size.height]
+                )
+            }
+        )
+    }
 }
+
 
 // 즐겨찾기 카드 뷰
 private struct MenuCardView: View {
@@ -163,6 +177,7 @@ private struct MenuCardView: View {
                     .resizable()
                     .frame(width: 14, height: 17)
                     .padding(12)
+                    .foregroundColor(.red)
             }
             .buttonStyle(.plain)
         }

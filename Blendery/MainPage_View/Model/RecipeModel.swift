@@ -127,6 +127,15 @@ extension MenuCardModel {
         )
     }
     
+    
+        static func fromFavorite(_ recipe: RecipeModel) -> MenuCardModel {
+            var m = from(recipe)
+            m.isBookmarked = true
+            return m
+        }
+    
+
+    
     // ✅ 검색 결과용 (SearchRecipeModel → MenuCardModel)
     static func fromSearch(_ model: SearchRecipeModel) -> MenuCardModel {
         MenuCardModel(
@@ -171,4 +180,6 @@ extension MenuCardModel {
         return result
     }
 }
+
+
 

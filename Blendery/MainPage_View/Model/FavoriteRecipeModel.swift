@@ -7,17 +7,7 @@
 
 import Foundation
 
-struct FavoriteRecipeResponse: Decodable {
+struct FavoriteResponse: Decodable {
     let cafeId: String
-    let favorites: [FavoriteRecipe]
-}
-
-struct FavoriteRecipe: Decodable, Identifiable {
-    let recipeId: UUID
-    let title: String
-    let category: String
-    let hotThumbnailUrl: String?
-    let iceThumbnailUrl: String?
-
-    var id: UUID { recipeId }
+    let favorites: [RecipeModel]
 }

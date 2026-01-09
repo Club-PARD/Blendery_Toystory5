@@ -117,6 +117,17 @@ struct Mainpage_View: View {
                         goStaffList = true
                     },
                     
+                    onTapCategory: { category in
+                        print("🟢 Mainpage_View received category:", category)
+
+                        Task {
+                            if category == "즐겨찾기" {
+                                print("🟢 calling loadFavoritesForMyCafe")
+                                await vm.loadFavoritesForMyCafe()
+                            }
+                        }
+                    },
+                    
                     // 뷰 상태 바인딩
                     // 선택된 카테고리 값 전달
                     // 서버와 직접 무관
@@ -147,12 +158,23 @@ struct Mainpage_View: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity) // ✅ frame은 여기(TabView)에만 1번
                 .onChange(of: selectedCategory) { newCategory in
                     Task {
-                        if newCategory == "즐겨찾기" { return }
-                        let serverCategory = vm.serverCategory(from: newCategory)
-                        guard let userId else {
-                            print("🚫 userId 없음 - API 호출 차단")
+                        if newCategory == "즐겨찾기" {
+                            print("🟢 onChange -> loadFavoritesForMyCafe")
+                            await vm.loadFavoritesForMyCafe()
                             return
                         }
+
+                        guard let userId else {
+                            print("⛔️ userId nil")
+                            return
+                        }
+
+                        guard let serverCategory = vm.serverCategory(from: newCategory) else {
+                            print("⛔️ invalid category:", newCategory)
+                            return
+                        }
+
+                        print("🟢 onChange -> fetchRecipes:", serverCategory)
                         await vm.fetchRecipes(
                             userId: userId,
                             franchiseId: "ac120003-9b6e-19e0-819b-6e8a08870001",
@@ -160,6 +182,7 @@ struct Mainpage_View: View {
                         )
                     }
                 }
+
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             

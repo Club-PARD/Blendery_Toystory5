@@ -32,6 +32,10 @@ struct Mainpage_ScrollView: View {
                 vm: vm,
                 onSelectMenu: onSelectMenu
             )
+            .task {
+                print("⭐️ Favorite tab view active")
+                await vm.loadFavoritesForMyCafe()
+            }
 
         } else {
 

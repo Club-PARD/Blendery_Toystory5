@@ -135,8 +135,40 @@ final class APIClient {
         let url = URL(string: "\(baseURL)/api/recipe/\(recipeId.uuidString)")!
         
         let request = try makeAuthorizedRequest(url: url, userId: userId)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let http = response as? HTTPURLResponse,
+              (200...299).contains(http.statusCode)
+        else {
+            throw URLError(.badServerResponse)
+        }
+        
+        return try JSONDecoder().decode(RecipeModel.self, from: data)
+    }
+    
+    func fetchFavorites(cafeId: String) async throws -> FavoriteResponse {
+        guard let userId = SessionManager.shared.currentUserId else {
+            print("⛔️ fetchFavorites: userId is nil")
+            throw URLError(.userAuthenticationRequired)
+        }
+
+        var components = URLComponents(string: "\(baseURL)/api/recipe/recipe-favorites")!
+        components.queryItems = [URLQueryItem(name: "cafeId", value: cafeId)]
+
+        guard let url = components.url else { throw URLError(.badURL) }
+
+        var request = try makeAuthorizedRequest(url: url, userId: userId)
+        request.httpMethod = "GET"  // ✅ 명시 추천
+
+        print("➡️ fetchFavorites REQUEST:", url.absoluteString)
 
         let (data, response) = try await URLSession.shared.data(for: request)
+
+        if let http = response as? HTTPURLResponse {
+            print("📡 favorites statusCode:", http.statusCode)
+        }
+        print("📦 favorites raw response:", String(data: data, encoding: .utf8) ?? "nil")
 
         guard let http = response as? HTTPURLResponse,
               (200...299).contains(http.statusCode)
@@ -144,6 +176,32 @@ final class APIClient {
             throw URLError(.badServerResponse)
         }
 
-        return try JSONDecoder().decode(RecipeModel.self, from: data)
+        return try JSONDecoder().decode(FavoriteResponse.self, from: data)
+    }
+
+    
+    func fetchMyCafes() async throws -> [Cafe] {
+        guard let userId = SessionManager.shared.currentUserId else {
+            throw URLError(.userAuthenticationRequired)
+        }
+        
+        let url = URL(string: "\(baseURL)/api/members/staff/cafes")!
+        let request = try makeAuthorizedRequest(url: url, userId: userId)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        if let http = response as? HTTPURLResponse {
+            print("📡 cafes statusCode:", http.statusCode)
+        }
+        print("📦 cafes raw response:", String(data: data, encoding: .utf8) ?? "nil")
+        
+        guard let http = response as? HTTPURLResponse,
+              (200...299).contains(http.statusCode)
+        else {
+            throw URLError(.badServerResponse)
+        }
+        
+        let res = try JSONDecoder().decode(MemberCafesResponse.self, from: data)
+        return res.cafes
     }
 }
