@@ -1,3 +1,8 @@
+//
+//  ProfileCard.swift
+//  Blendery
+//
+
 import SwiftUI
 
 struct ProfileCard: View {
@@ -35,7 +40,7 @@ struct ProfileCard: View {
                 }
                 .frame(width: 72, height: 72)
                 .clipShape(Circle())
-                
+
                 if showCameraButton {
                     Button {
                         viewModel.openPhotoEditSheet()
@@ -64,6 +69,7 @@ struct ProfileCard: View {
                             Image("pencil")
                         }
                     }
+
                     Spacer()
                 }
 
@@ -94,12 +100,13 @@ struct ProfileCard: View {
         }
         .padding(.vertical, 35)
         .padding(.horizontal, 20)
-        .background(cardBackground)
+        .background(cardBackground) // ✅ 테두리 제거된 카드 배경
     }
 
+    // ✅ 기존 stroke(테두리) 제거
     private var cardBackground: some View {
-        RoundedRectangle(cornerRadius: 20)
-            .stroke(Color.gray.opacity(0.3), lineWidth: 0.5)
-            .shadow(color: Color.black.opacity(0.3), radius: 2)
+        RoundedRectangle(cornerRadius: 20, style: .continuous)
+            .fill(Color.white)
+            .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 3)
     }
 }

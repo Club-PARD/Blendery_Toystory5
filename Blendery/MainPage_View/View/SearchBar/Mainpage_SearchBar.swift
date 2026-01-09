@@ -11,7 +11,7 @@ struct SearchBarView: View {
     @ObservedObject var vm: SearchBarViewModel
     
     // ✅ 외부 주입 값
-    var placeholder: String = "검색"
+    var placeholder: String = "메뉴 검색"
     var onSearchTap: (() -> Void)? = nil
     
     var onOpen: (() -> Void)? = nil
@@ -69,6 +69,10 @@ struct SearchBarView: View {
                         .padding(.trailing, 14)
                 }
             }
+            .background(
+                RoundedRectangle(cornerRadius: 30, style: .continuous)
+                    .fill(Color(red: 1.0, green: 0.92, blue: 0.92).opacity(0.35))   // ✅ 연한 빨간색(핑크톤)
+            )
             .overlay(
                 RoundedRectangle(cornerRadius: 30)
                     .stroke(orange, lineWidth: 1.5)

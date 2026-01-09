@@ -3,6 +3,11 @@
 //  Blendery
 //
 
+//
+//  Mainpage_SearchOverlayView.swift
+//  Blendery
+//
+
 import SwiftUI
 import UIKit
 
@@ -20,7 +25,18 @@ struct Mainpage_SearchOverlayView: View {
                 .ignoresSafeArea()
                 .onTapGesture { closeSearch() }
 
-            if searchVM.isLoading {
+            // ✅ 0) 검색창 들어왔는데 아직 입력이 없으면 BeforeSearch 보여주기
+            if searchVM.isFocused && !searchVM.hasText {
+                VStack {
+                    Spacer()
+                    BeforeSearch_View()
+                        .padding(.bottom, -125) // 필요하면 SearchEmpty랑 동일하게 위치감 맞추기
+                    Spacer()
+                }
+                .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 74) }
+
+            // ✅ 1) 로딩 중
+            } else if searchVM.isLoading {
                 VStack {
                     Spacer()
                     ProgressView()
@@ -28,14 +44,17 @@ struct Mainpage_SearchOverlayView: View {
                 }
                 .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 74) }
 
+            // ✅ 2) 입력은 있는데 결과가 비었으면 Empty
             } else if searchVM.hasText && searchVM.results.isEmpty {
                 VStack {
                     Spacer()
                     SearchEmpty_View()
-                        .padding(.bottom, -125)   // ✅ 너가 예전에 쓰던 위치감 그대로
+                        .padding(.bottom, -125)
                     Spacer()
                 }
                 .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 74) }
+
+            // ✅ 3) 결과 리스트
             } else {
                 ScrollView {
                     LazyVStack(spacing: 0) {

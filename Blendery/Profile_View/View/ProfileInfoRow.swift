@@ -1,3 +1,8 @@
+//
+//  ProfileInfoRow.swift
+//  Blendery
+//
+
 import SwiftUI
 
 struct ProfileInfoRow: View {
@@ -34,7 +39,7 @@ struct ProfileInfoRow: View {
         }
         .padding(.horizontal, 23)
         .padding(.vertical, 12)
-        .contentShape(Rectangle())           
+        .contentShape(Rectangle())
         .onTapGesture { onTap?() }
     }
 }

@@ -27,11 +27,7 @@ struct OptionButton: View {
                 SizeSegment(selected: $size)
             }
         }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 24)
-                .fill(Color(red: 247/255, green: 247/255, blue: 247/255, opacity: 1))
-        )
-        .frame(width: 176.34)
+        .padding(16)              // ✅ 그대로 유지 (토글 위치/간격 그대로)
+                .frame(width: 176.34)
     }
 }

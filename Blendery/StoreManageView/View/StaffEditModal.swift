@@ -1,7 +1,15 @@
+//
+//  StaffEditModal.swift
+//  Blendery
+//
+
 import SwiftUI
 
 // ===============================
 //  StaffEditModal.swift
+//  - 직급 변경 모달
+//  - 경고창: "전체 화면 중앙" (fullScreenCover)
+//  - 애니메이션: 최대한 억제(딱 뜨게)
 // ===============================
 
 struct StaffEditModal: View {
@@ -15,10 +23,9 @@ struct StaffEditModal: View {
     @State private var showChangeConfirm: Bool = false
     @State private var pendingRole: StaffMember.Role? = nil
 
-
     var body: some View {
         ZStack {
-            // ✅ 모달 배경: 흰색
+            // ✅ 모달 배경
             Color.white
                 .ignoresSafeArea()
 
@@ -40,7 +47,7 @@ struct StaffEditModal: View {
                 }
                 .background(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(Color(red: 0.95, green: 0.95, blue: 0.95)) // ✅ 내부: 회색
+                        .fill(Color(red: 0.95, green: 0.95, blue: 0.95))
                 )
                 .padding(.top, 6)
 
@@ -49,11 +56,15 @@ struct StaffEditModal: View {
             .padding(24)
         }
 
-        // ✅ 핵심: 시트 위에 또 하나의 "전체화면 레이어"로 경고창 올리기
-        // → 그래서 모달 닫지 않아도 경고창 터치 가능
+        // ✅ 예전 위치 그대로: "전체 화면" 위에 띄우기
         .fullScreenCover(isPresented: $showChangeConfirm) {
             changeConfirmOverlayFullScreen()
                 .presentationBackground(.clear) // iOS 16+
+                .transaction { t in
+                    // ✅ 전환 애니메이션 최대 억제
+                    t.animation = nil
+                    t.disablesAnimations = true
+                }
         }
     }
 
@@ -61,12 +72,10 @@ struct StaffEditModal: View {
     //  액션 로직
     // ===============================
 
-    // 같은 직급이면 무시(모달 유지)
-    // 다른 직급이면 경고창 열기
     private func requestRoleChange(_ role: StaffMember.Role) {
         guard member.role != role else { return }
         pendingRole = role
-        showChangeConfirm = true
+        presentConfirmNoAnimation()
     }
 
     private func confirmRoleChange() {
@@ -74,16 +83,35 @@ struct StaffEditModal: View {
 
         var updated = member
         updated.role = role
-        onSave(updated)     // ✅ 반영
-        showChangeConfirm = false
+        onSave(updated)
+
+        dismissConfirmNoAnimation()
         pendingRole = nil
-        onClose()           // ✅ 모달 닫기
+        onClose()
     }
 
     private func cancelRoleChange() {
-        showChangeConfirm = false
+        dismissConfirmNoAnimation()
         pendingRole = nil
-        // ✅ 모달은 유지
+    }
+
+    // ✅ showChangeConfirm 토글을 애니메이션 없이
+    private func presentConfirmNoAnimation() {
+        var tr = Transaction()
+        tr.animation = nil
+        tr.disablesAnimations = true
+        withTransaction(tr) {
+            showChangeConfirm = true
+        }
+    }
+
+    private func dismissConfirmNoAnimation() {
+        var tr = Transaction()
+        tr.animation = nil
+        tr.disablesAnimations = true
+        withTransaction(tr) {
+            showChangeConfirm = false
+        }
     }
 
     // ===============================
@@ -116,20 +144,18 @@ struct StaffEditModal: View {
         .buttonStyle(.plain)
     }
 
-    // ✅ “화면 전체”에서 중앙에 뜨는 커스텀 경고창 (모달 위에서 동작)
+    // ✅ “화면 전체”에서 중앙에 뜨는 커스텀 경고창
     private func changeConfirmOverlayFullScreen() -> some View {
         ZStack {
-            // 딤 처리 (전체 화면)
             Color.black.opacity(0.25)
                 .ignoresSafeArea()
                 .onTapGesture { } // 바깥 탭 무시
 
-            // ✅ 팝업: 화면 정중앙
             VStack(spacing: 12) {
                 Image("느낌표")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 32, height: 96) // ✅ 요청한 크기
+                    .frame(width: 32, height: 96)
 
                 Text("직급을 변경하시겠습니까?")
                     .font(.system(size: 16, weight: .semibold))
@@ -172,6 +198,16 @@ struct StaffEditModal: View {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(Color.white)
             )
+            // ✅ 중앙 “고정”
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         }
     }
+}
+
+#Preview {
+    StaffEditModal(
+        member: StaffMember(name: "이지수", startDateText: "2010.12.25~", role: .manager),
+        onSave: { _ in },
+        onClose: {}
+    )
 }

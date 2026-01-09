@@ -13,11 +13,13 @@ struct RecipeStepCell: View {
 
     var body: some View {
         HStack(spacing: 11) {
+
+            // ✅ 숫자 원: 흰색
             Text("\(index)")
                 .font(.system(size: 13, weight: .regular))
                 .foregroundColor(Color(red: 170/255, green: 170/255, blue: 170/255, opacity: 1))
                 .frame(width: 32, height: 32)
-                .background(Color(red: 246/255, green: 246/255, blue: 246/255, opacity: 1))
+                .background(Color.white)
                 .clipShape(Circle())
 
             Text(step.text)
@@ -27,9 +29,11 @@ struct RecipeStepCell: View {
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 12)
+
+        // ✅ 리스트 사각형 배경: 연회색 (테두리 제거)
         .background(
-            RoundedRectangle(cornerRadius: 10.71)
-                .stroke(Color(red: 239/255, green: 239/255, blue: 239/255, opacity: 1), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 10.71, style: .continuous)
+                .fill(Color(red: 246/255, green: 246/255, blue: 246/255, opacity: 1))
         )
     }
 }

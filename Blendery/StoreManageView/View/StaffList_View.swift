@@ -53,6 +53,7 @@ struct StaffList_View: View {
                 Color(red: 0.97, green: 0.97, blue: 0.97)
                     .ignoresSafeArea()
 
+                // ✅ 아래 화면(리스트/버튼) : 경고창 떠있을 때 터치/스크롤/버튼 전부 차단
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 18) {
 
@@ -80,15 +81,27 @@ struct StaffList_View: View {
                     .padding(.top, 12)
                     .padding(.bottom, 30)
                 }
+                .allowsHitTesting(!showConfirm)
 
-                // ✅ 토스트 (리스트 화면 위에 떠야 함)
+                // ✅ 토스트 (리스트 화면 위)
                 if showToast {
                     toastView(text: toastMessage)
                         .zIndex(999)
+                        .allowsHitTesting(false)
+                }
+
+                // ✅ 중앙 경고창 (애니메이션 없이 "딱" 표시)
+                if showConfirm {
+                    confirmOverlayFullScreen()
+                        .zIndex(1000)
+                        .transition(.identity)
                 }
             }
             .navigationTitle("직원 관리")
             .navigationBarTitleDisplayMode(.inline)
+
+            // ✅ showConfirm 토글 애니메이션 자체 차단
+            .animation(nil, value: showConfirm)
         }
 
         // ✅ 직급 변경 모달(편집 모달)
@@ -109,7 +122,6 @@ struct StaffList_View: View {
         .sheet(isPresented: $showAddModal) {
             StaffAddModal(
                 onSend: { _ in
-                    // ✅ 발송 UI만: 모달 닫히고 리스트에서 토스트
                     showToastMessage("발송 완료")
                 },
                 onClose: {
@@ -117,12 +129,6 @@ struct StaffList_View: View {
                 }
             )
             .presentationDetents([.fraction(0.45)])
-        }
-
-        // ✅ 리스트 화면 기준 “중앙 경고창”
-        .fullScreenCover(isPresented: $showConfirm) {
-            confirmOverlayFullScreen()
-                .presentationBackground(.clear)
         }
     }
 }
@@ -251,23 +257,37 @@ private extension StaffList_View {
 // MARK: - 리스트 화면 경고창 로직 + 토스트
 private extension StaffList_View {
 
+    // ✅ 애니메이션 없이 showConfirm = true
+    func presentConfirmNoAnimation() {
+        var t = Transaction()
+        t.disablesAnimations = true
+        withTransaction(t) {
+            showConfirm = true
+        }
+    }
+
     func requestRoleChangeConfirm(member: StaffMember, newRole: StaffMember.Role) {
         guard member.role != newRole else { return }
 
         confirmMode = .roleChange
         roleChangeTarget = member
         pendingRole = newRole
-        showConfirm = true
+        presentConfirmNoAnimation()
     }
 
     func requestDeleteConfirm(member: StaffMember) {
         confirmMode = .delete
         deleteTarget = member
-        showConfirm = true
+        presentConfirmNoAnimation()
     }
 
     func cancelConfirm() {
-        showConfirm = false
+        var t = Transaction()
+        t.disablesAnimations = true
+        withTransaction(t) {
+            showConfirm = false
+        }
+
         roleChangeTarget = nil
         pendingRole = nil
         deleteTarget = nil
@@ -301,12 +321,17 @@ private extension StaffList_View {
         }
     }
 
+    // ✅ 경고창(오버레이): 딤 영역도 터치 먹고, 아래 화면은 이미 allowsHitTesting(false)
     func confirmOverlayFullScreen() -> some View {
         ZStack {
+            // 딤 처리(전체 화면) + 터치 먹기
             Color.black.opacity(0.25)
                 .ignoresSafeArea()
-                .onTapGesture { }
+                .contentShape(Rectangle())
+                .onTapGesture { } // 바깥 탭 무시
+                .allowsHitTesting(true)
 
+            // 팝업(정중앙)
             VStack(spacing: 12) {
 
                 Image("느낌표")
@@ -363,7 +388,7 @@ private extension StaffList_View {
     }
 
     // ===============================
-    //  ✅ 토스트 메시지 (여기 안에 있어야 @State 접근 가능)
+    //  토스트
     // ===============================
 
     func showToastMessage(_ text: String) {
