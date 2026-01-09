@@ -15,6 +15,7 @@ struct StaffEditModal: View {
     @State private var showChangeConfirm: Bool = false
     @State private var pendingRole: StaffMember.Role? = nil
 
+
     var body: some View {
         ZStack {
             // ✅ 모달 배경: 흰색
@@ -40,10 +41,6 @@ struct StaffEditModal: View {
                 .background(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .fill(Color(red: 0.95, green: 0.95, blue: 0.95)) // ✅ 내부: 회색
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(Color.black.opacity(0.06), lineWidth: 1)
                 )
                 .padding(.top, 6)
 

@@ -132,7 +132,7 @@ private extension StaffList_View {
 
     var sidePadding: CGFloat { 18 }
     var cardRadius: CGFloat { 20 }
-    var rowVPadding: CGFloat { 14 }
+    var rowVPadding: CGFloat { 20 }
 
     func sectionTitle(_ title: String) -> some View {
         Text(title)
@@ -148,10 +148,6 @@ private extension StaffList_View {
             .background(
                 RoundedRectangle(cornerRadius: cardRadius, style: .continuous)
                     .fill(Color.white)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: cardRadius, style: .continuous)
-                            .stroke(Color.black.opacity(0.06), lineWidth: 1)
-                    )
                     .shadow(color: Color.black.opacity(0.03),
                             radius: 10, x: 0, y: 4)
             )
@@ -193,12 +189,12 @@ private extension StaffList_View {
 
                         Spacer()
 
-                        HStack(spacing: 10) {
+                        HStack(spacing: 18) {
                             Button { roleEditTarget = member } label: {
                                 Image("직원수정")
                                     .resizable()
                                     .scaledToFit()
-                                    .frame(width: 30, height: 30)
+                                    .frame(width: 24, height: 24)
                             }
                             .buttonStyle(.plain)
 
@@ -206,7 +202,7 @@ private extension StaffList_View {
                                 Image("직원삭제")
                                     .resizable()
                                     .scaledToFit()
-                                    .frame(width: 30, height: 30)
+                                    .frame(width: 24, height: 24)
                             }
                             .buttonStyle(.plain)
                         }
