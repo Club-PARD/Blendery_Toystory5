@@ -1,54 +1,52 @@
-//
-//  RootView.swift
-//  Blendery
-//
-//  Created by 박영언 on 1/8/26.
-//
-
 import SwiftUI
 
 struct RootView: View {
 
+    // ===============================
+    //  뷰 상태 변수
+    // ===============================
     @State private var isLoggedIn = false
     @State private var appResetID = UUID()
+
+    // ===============================
+    //  환경 오브젝트 (BlenderyApp에서 주입받음)
+    // ===============================
+    @EnvironmentObject var favoriteStore: FavoriteStore
 
     var body: some View {
         NavigationStack {
             Group {
                 if isLoggedIn {
                     Mainpage_View(
-                        onLogout: {
-                            logout()
-                        }
+                        onLogout: { logout() }
                     )
                 } else {
                     OnboardingAnimationView(
-                        onLoginSuccess: {
-                            isLoggedIn = true
-                        }
+                        onLoginSuccess: { isLoggedIn = true }
                     )
                 }
             }
         }
         .id(appResetID)
-        .onAppear {
-            checkAutoLogin()
-        }
+        .onAppear { checkAutoLogin() }
     }
 
+    // ===============================
+    //  자동 로그인 체크
+    // ===============================
     private func checkAutoLogin() {
         guard
             let userId = SessionManager.shared.currentUserId,
             KeychainHelper.shared.readToken(for: userId) != nil
-        else {
-            return
-        }
+        else { return }
+
         isLoggedIn = true
     }
 
+    // ===============================
+    //  로그아웃
+    // ===============================
     private func logout() {
-        print("🔥 logout")
-
         if let userId = SessionManager.shared.currentUserId {
             KeychainHelper.shared.deleteToken(for: userId)
         }
@@ -56,9 +54,9 @@ struct RootView: View {
         SessionManager.shared.currentUserId = nil
         isLoggedIn = false
 
-        appResetID = UUID()
+        // ✅ (선택) 로그아웃 시 즐겨찾기 로컬 캐시 초기화/시드
+        // favoriteStore.resetToSeed()  // 너가 원하면 여기서 호출
 
-        print("✅ 완전 로그아웃")
+        appResetID = UUID()
     }
 }
-

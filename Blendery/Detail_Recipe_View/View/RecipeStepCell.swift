@@ -1,4 +1,3 @@
-//
 //  RecipeStepCell.swift
 //  Blendery
 //
@@ -37,3 +36,13 @@ struct RecipeStepCell: View {
         )
     }
 }
+
+//#Preview {
+//    RecipeStepCell(
+//        index: 1,
+//        step: RecipeStep(text: "에스프레소 2샷 추출")
+//    )
+//    .padding()
+//    .previewLayout(.sizeThatFits)
+//    .background(Color.white)
+//}

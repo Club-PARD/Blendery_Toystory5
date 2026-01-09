@@ -2,8 +2,6 @@
 //  RecipeTitle.swift
 //  Blendery
 //
-//  Created by 박영언 on 12/26/25.
-//
 
 import SwiftUI
 
@@ -12,6 +10,8 @@ struct RecipeTitle: View {
     let optionTags: [String]
     let thumbnailURL: URL?
 
+    @EnvironmentObject var favoriteStore: FavoriteStore
+
     var body: some View {
         HStack {
             ZStack {
@@ -19,6 +19,7 @@ struct RecipeTitle: View {
                     .fill(Color(red: 217/255, green: 217/255, blue: 217/255, opacity: 1.0))
                     .frame(width: 70, height: 70)
                     .cornerRadius(10)
+
                 if let url = thumbnailURL {
                     AsyncImage(url: url) { phase in
                         switch phase {
@@ -34,7 +35,7 @@ struct RecipeTitle: View {
                         }
                     }
                     .frame(width: 70, height: 70)
-                }else {
+                } else {
                     Image("상세 로딩")
                         .resizable()
                         .scaledToFit()
@@ -44,12 +45,16 @@ struct RecipeTitle: View {
 
             VStack {
                 HStack {
-                    OptionBadge(
-                        tags: optionTags
-                    )
-                    .padding(.bottom, 8)
+                    OptionBadge(tags: optionTags)
+                        .padding(.bottom, 8)
+
                     Spacer()
-                    FavoriteButton()
+
+                    // ✅ 즐겨찾기: FavoriteStore 기준
+                    FavoriteButton(
+                        isFavorite: favoriteStore.isFavorite(recipeId: menu.id),
+                        onTap: { favoriteStore.toggle(card: menu) }
+                    )
                 }
 
                 Text(menu.title)
@@ -59,16 +64,3 @@ struct RecipeTitle: View {
         }
     }
 }
-
-//#Preview {
-//    RecipeTitle(
-//        menu: MenuCardModel(
-//            category: "커피",
-//            tags: ["ICE"], // ✅ 추가
-//            title: "카페모카",
-//            subtitle: "에스프레소 2샷",
-//            lines: ["에스프레소 2샷", "초코소스 2펌프", "우유 윗선"],
-//            isBookmarked: false
-//        )
-//    )
-//}

@@ -11,14 +11,12 @@ import UIKit
 struct SeasonCarouselView: View {
 
     // 서버 데이터
-    // 시즌 메뉴 목록
     let items: [MenuCardModel]
 
     // 화면 이동용 이벤트
     var onSelectMenu: (MenuCardModel) -> Void = { _ in }
 
-    // 서버 호출
-    // 즐겨찾기 토글 같은 상태 변경 트리거
+    // 서버 호출 (즐겨찾기 토글)
     var onToggleBookmark: (UUID) -> Void = { _ in }
 
     // UI 레이아웃 상수
@@ -35,11 +33,6 @@ struct SeasonCarouselView: View {
         return (0..<5).flatMap { copy in
             items.map { LoopItem(copy: copy, item: $0) }
         }
-    }
-
-    // UI 상태 판정
-    private func isCentered(_ loopID: String) -> Bool {
-        return focusedID == loopID
     }
 
     // 캐러셀 중앙 카드 추적 상태
@@ -73,24 +66,22 @@ struct SeasonCarouselView: View {
 
                                 SeasonCard(
                                     item: loop.item,
-
-                                    // 서버 호출 즐찾
                                     onToggleBookmark: { onToggleBookmark(loop.item.id) }
                                 )
                                 .frame(width: cardWidth, height: cardHeight)
                                 .scaleEffect(x: xScale, y: yScale)
-                                .animation(.easeOut(duration: 0.18), value: focusedID)
+
+                                // ✅ (지지직 개선) 스크롤 중 계속 애니메이션 걸리는거 제거
+                                // .animation(.easeOut(duration: 0.18), value: focusedID)
+
                                 .contentShape(Rectangle())
                                 .onTapGesture {
-
-                                    // UI 상호작용
                                     let wasCentered = (focusedID == loop.id)
 
                                     withAnimation(.easeInOut(duration: 0.25)) {
                                         focusedID = loop.id
                                     }
 
-                                    // 화면 이동용 이벤트
                                     if wasCentered {
                                         onSelectMenu(loop.item)
                                     }
@@ -108,7 +99,6 @@ struct SeasonCarouselView: View {
                 .scrollTargetBehavior(.viewAligned(limitBehavior: .always))
                 .scrollPosition(id: $focusedID, anchor: .center)
                 .onChange(of: focusedID) { newValue in
-
                     // UI 무한 스크롤 점프 트리거
                     guard let newValue,
                           let parsed = LoopItem.parse(id: newValue) else { return }
@@ -198,6 +188,56 @@ private struct LoopItem: Identifiable {
     }
 }
 
+// ===============================
+//  ✅ URL 이미지 뷰 (레이아웃 흔들림 방지용)
+// ===============================
+private struct RemoteMenuImageView: View {
+
+    let urlString: String?
+
+    var body: some View {
+        let url = makeURL(urlString)
+
+        Group {
+            if let url {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .empty:
+                        placeholder
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .scaledToFill() // ✅ 스크롤 중 레이아웃 흔들림 줄이려면 Fill이 안정적
+                    case .failure:
+                        placeholder
+                    @unknown default:
+                        placeholder
+                    }
+                }
+            } else {
+                placeholder
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity) // ✅ 항상 같은 크기 유지
+        .clipped()
+    }
+
+    private func makeURL(_ s: String?) -> URL? {
+        guard let s, !s.isEmpty else { return nil }
+        return URL(string: s)
+    }
+
+    private var placeholder: some View {
+        ZStack {
+            Color.white
+            Image("loading")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 125, height: 125)
+        }
+    }
+}
+
 // 카드 UI
 private struct SeasonCard: View {
 
@@ -216,7 +256,6 @@ private struct SeasonCard: View {
                     .frame(height: 260)
                     .frame(maxWidth: .infinity)
                     .clipped()
-                    .padding(.top, 20)
 
                 HStack(alignment: .center, spacing: 12) {
                     VStack(alignment: .leading, spacing: 6) {
@@ -266,25 +305,29 @@ private struct SeasonCard: View {
 
     private var imageView: some View {
 
-        // UI 이미지 선택 로직
-        let name = item.title
+        // ✅ 1) 서버 썸네일 우선 (ICE 있으면 ICE, 없으면 HOT)
+        let preferredURL: String? =
+            (item.iceThumbnailUrl?.isEmpty == false ? item.iceThumbnailUrl : nil)
+            ?? (item.hotThumbnailUrl?.isEmpty == false ? item.hotThumbnailUrl : nil)
 
-        if UIImage(named: name) != nil {
+        // ✅ 2) 로컬 이미지(타이틀과 같은 이름의 asset) fallback
+        if let preferredURL {
             return AnyView(
-                Image(name)
-                    .resizable()
-                    .scaledToFit()
+                RemoteMenuImageView(urlString: preferredURL)
             )
         } else {
-            return AnyView(
-                ZStack {
-                    Color.white
-                    Image("loading")
+            let name = item.title
+            if UIImage(named: name) != nil {
+                return AnyView(
+                    Image(name)
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 125, height: 125)
-                }
-            )
+                )
+            } else {
+                return AnyView(
+                    RemoteMenuImageView(urlString: nil)
+                )
+            }
         }
     }
 }

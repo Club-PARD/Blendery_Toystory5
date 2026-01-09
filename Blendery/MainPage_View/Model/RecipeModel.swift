@@ -94,10 +94,9 @@ extension RecipeVariantType {
 }
 
 extension MenuCardModel {
-    
-    // ✅ 메인 목록용 (RecipeModel → MenuCardModel)
+
     static func from(_ recipe: RecipeModel) -> MenuCardModel {
-        
+
         let recipesByOption: [String: [RecipeStep]] =
         Dictionary(grouping: recipe.variants, by: { $0.type.rawValue })
             .mapValues { variants in
@@ -105,52 +104,51 @@ extension MenuCardModel {
                     variant.steps.map { RecipeStep(text: $0) }
                 }
             }
-        
-        // ⭐️ 2. 기본 variant (fallback용)
+
+        // ⭐️ 기본 variant (fallback용)
         let defaultVariant =
         recipe.variants.first { $0.isDefault }
         ?? recipe.variants.first
-        
+
+        // ✅ 여기 추가: 대표 optionKey 저장 (Detail의 optionKey와 동일한 의미)
+        let defaultOptionKey = defaultVariant?.type.rawValue
+
         return MenuCardModel(
             id: recipe.recipeId,
             category: recipe.category,
+
+            // ✅ tags는 “NEW/SIGNATURE 같은 일반 태그”용으로 비워둬도 됨
             tags: [],
+
             title: recipe.title,
             subtitle: defaultVariant?.steps.first ?? "",
-            lines: defaultVariant?.steps ?? [],          // (기존 UI용 임시 유지)
-            recipesByOption: recipesByOption,            // ⭐️ 핵심
+            lines: defaultVariant?.steps ?? [],
+            recipesByOption: recipesByOption,
+
             isBookmarked: false,
             isImageLoading: false,
             imageName: nil,
             hotThumbnailUrl: recipe.hotThumbnailUrl,
-            iceThumbnailUrl: recipe.iceThumbnailUrl
+            iceThumbnailUrl: recipe.iceThumbnailUrl,
+
+            // ✅ 추가
+            defaultOptionKey: defaultOptionKey
         )
     }
+
     
-    // ✅ 검색 결과용 (SearchRecipeModel → MenuCardModel)
-    static func fromSearch(_ model: SearchRecipeModel) -> MenuCardModel {
-        MenuCardModel(
-            id: model.recipeId,
-            category: model.category,
-            tags: searchTags(from: model),
-            title: model.title,
-            subtitle: "",
-            lines: [],
-            recipesByOption: [:],
-            isBookmarked: false,
-            isImageLoading: false,
-            imageName: nil
-        )
+
+        // 🔎 검색 전용 태그
+        private static func searchTags(from model: SearchRecipeModel) -> [String] {
+            var tags: [String] = []
+            if model.signature { tags.append("SIGNATURE") }
+            if model.new { tags.append("NEW") }
+            return tags
+        }
     }
+        
     
-    // 🔎 검색 전용 태그
-    private static func searchTags(from model: SearchRecipeModel) -> [String] {
-        var tags: [String] = []
-        if model.signature { tags.append("SIGNATURE") }
-        if model.new { tags.append("NEW") }
-        return tags
-    }
-}
+
 
 
 // 아이스 메뉴 토글 조정 코드 추후 효율적으로 extension끼리 병합 가능할듯

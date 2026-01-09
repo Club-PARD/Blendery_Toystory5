@@ -21,45 +21,27 @@ let categories: [String] = [
 struct MenuCardModel: Identifiable, Hashable {
     let id: UUID
     let category: String
-    let tags: [String]          // ✅ 누락돼서 에러났던 부분
+    let tags: [String]
     let title: String
     let subtitle: String
-    let lines: [String]
+    var lines: [String]
+    let recipesByOption: [String: [RecipeStep]]
     var isBookmarked: Bool
-
     var isImageLoading: Bool
     var imageName: String?
-    
     let hotThumbnailUrl: String?
     let iceThumbnailUrl: String?
-    
-    let recipesByOption: [String: [RecipeStep]]
 
-    init(
-        id: UUID = UUID(),
-        category: String,
-        tags: [String] = [],
-        title: String,
-        subtitle: String,
-        lines: [String],
-        recipesByOption: [String: [RecipeStep]] = [:],
-        isBookmarked: Bool,
-        isImageLoading: Bool = false,
-        imageName: String? = nil,
-        hotThumbnailUrl: String? = nil,
-        iceThumbnailUrl: String? = nil
-    ) {
-        self.id = id
-        self.category = category
-        self.tags = tags
-        self.title = title
-        self.subtitle = subtitle
-        self.lines = lines
-        self.recipesByOption = recipesByOption
-        self.isBookmarked = isBookmarked
-        self.isImageLoading = isImageLoading
-        self.imageName = imageName
-        self.hotThumbnailUrl = hotThumbnailUrl
-        self.iceThumbnailUrl = iceThumbnailUrl
+    // ✅ 추가: 카드 대표 옵션 키(= Detail의 optionKey랑 같은 의미)
+    let defaultOptionKey: String?
+
+    // ✅ 추가: Detail과 동일 방식으로 배지 태그 계산
+    var optionBadgeTags: [String] {
+        RecipeVariantType(rawValue: defaultOptionKey ?? "")?.optionTags ?? []
+    }
+
+    // ✅ 카드에서 배지로 뭘 보여줄지 통합(옵션태그 우선, 없으면 기존 tags)
+    var badgeTags: [String] {
+        !optionBadgeTags.isEmpty ? optionBadgeTags : tags
     }
 }

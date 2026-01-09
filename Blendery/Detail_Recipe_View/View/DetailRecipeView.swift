@@ -116,7 +116,7 @@ struct DetailRecipeView: View {
         .navigationDestination(item: $selectedRecipe) { nav in
             DetailRecipeViewByID(
                 recipeId: nav.id,
-                userId: userId
+                allMenus: allMenus,
             )
         }
         // ✅ FocusState 동기화(메인페이지 방식)
@@ -237,35 +237,35 @@ private struct SearchResultRow: View {
 
 
 
-#Preview {
-    let previewMenu = MenuCardModel(
-        id: UUID(),
-        category: "커피",
-        tags: [],
-        title: "카페모카",
-        subtitle: "에스프레소 2샷",
-        lines: [],   // 👈 currentSteps는 VM에서 사용
-        recipesByOption: [
-            "ICE_LARGE": [
-                RecipeStep(text: "얼음 컵에 우유"),
-                RecipeStep(text: "에스프레소 2샷"),
-                RecipeStep(text: "초코 시럽")
-            ],
-            "HOT_EXTRA": [
-                RecipeStep(text: "따뜻한 우유"),
-                RecipeStep(text: "에스프레소 3샷"),
-                RecipeStep(text: "초코 시럽")
-            ]
-        ],
-        isBookmarked: false,
-        isImageLoading: false,
-        imageName: nil
-    )
-
-    NavigationStack {
-        DetailRecipeView(
-            menu: previewMenu,
-            allMenus: [previewMenu]
-        )
-    }
-}
+//#Preview {
+//    let previewMenu = MenuCardModel(
+//        id: UUID(),
+//        category: "커피",
+//        tags: [],
+//        title: "카페모카",
+//        subtitle: "에스프레소 2샷",
+//        lines: [],   // 👈 currentSteps는 VM에서 사용
+//        recipesByOption: [
+//            "ICE_LARGE": [
+//                RecipeStep(text: "얼음 컵에 우유"),
+//                RecipeStep(text: "에스프레소 2샷"),
+//                RecipeStep(text: "초코 시럽")
+//            ],
+//            "HOT_EXTRA": [
+//                RecipeStep(text: "따뜻한 우유"),
+//                RecipeStep(text: "에스프레소 3샷"),
+//                RecipeStep(text: "초코 시럽")
+//            ]
+//        ],
+//        isBookmarked: false,
+//        isImageLoading: false,
+//        imageName: nil
+//    )
+//
+//    NavigationStack {
+//        DetailRecipeView(
+//            menu: previewMenu,
+//            allMenus: [previewMenu]
+//        )
+//    }
+//}
